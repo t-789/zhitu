@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.example.lifecomposer.Entity.User;
 import org.example.lifecomposer.Exception.ProfileApiException;
 import org.example.lifecomposer.Repository.UserRepository;
+import org.example.lifecomposer.Service.ChatConcurrencyGuard;
 import org.example.lifecomposer.Service.ChatQuotaDecision;
 import org.example.lifecomposer.Service.ChatQuotaService;
 import org.example.lifecomposer.Service.ChatService;
@@ -29,15 +30,18 @@ public class ProfileChangeController {
     private final ChatService chatService;
     private final ChatQuotaService chatQuotaService;
     private final UserRepository userRepository;
+    private final ChatConcurrencyGuard concurrencyGuard;
 
     public ProfileChangeController(ProfileChangeService profileChangeService,
                                    ChatService chatService,
                                    ChatQuotaService chatQuotaService,
-                                   UserRepository userRepository) {
+                                   UserRepository userRepository,
+                                   ChatConcurrencyGuard concurrencyGuard) {
         this.profileChangeService = profileChangeService;
         this.chatService = chatService;
         this.chatQuotaService = chatQuotaService;
         this.userRepository = userRepository;
+        this.concurrencyGuard = concurrencyGuard;
     }
 
     @GetMapping
@@ -93,31 +97,39 @@ public class ProfileChangeController {
             if (pending > 0) {
                 continuationDeferred = true;
                 agentMessage = "还有 " + pending + " 条画像变更待确认，全部处理完我再统一给出建议。";
+            } else if (!concurrencyGuard.tryAcquire(userId)) {
+                // v0.1.2: another AI request of this user is running. The decision
+                // is already persisted; skip the continuation without using quota.
+                agentMessage = fallbackMessage(result) + "（当前已有对话在处理中，稍后可继续提问）";
             } else {
-                // The continuation is an AI call: it obeys the same per-user
-                // minute/daily quota as /api/chat/*. The decision is already
-                // persisted, so quota failure only skips the continuation.
-                ChatQuotaDecision quota = chatQuotaService.tryConsume(userId);
-                if (!quota.allowed()) {
-                    quotaExceeded = true;
-                    retryAfterSeconds = quota.retryAfterSeconds();
-                    agentMessage = fallbackMessage(result) + "（全部候选已处理，但 AI 续答额度已用完：" + quota.message() + "）";
-                } else {
-                    String context = profileChangeService.batchContext(
-                            userId.longValue(), result.candidate().getBatchId());
-                    if (context == null || context.isBlank()) {
-                        context = result.agentContext();
+                try {
+                    // The continuation is an AI call: it obeys the same per-user
+                    // minute/daily quota as /api/chat/*. The decision is already
+                    // persisted, so quota failure only skips the continuation.
+                    ChatQuotaDecision quota = chatQuotaService.tryConsume(userId);
+                    if (!quota.allowed()) {
+                        quotaExceeded = true;
+                        retryAfterSeconds = quota.retryAfterSeconds();
+                        agentMessage = fallbackMessage(result) + "（全部候选已处理，但 AI 续答额度已用完：" + quota.message() + "）";
+                    } else {
+                        String context = profileChangeService.batchContext(
+                                userId.longValue(), result.candidate().getBatchId());
+                        if (context == null || context.isBlank()) {
+                            context = result.agentContext();
+                        }
+                        try {
+                            ChatResponse chat = chatService.continueAfterProfileDecision(userId, context);
+                            agentMessage = chat.getContent();
+                            agentAnswered = agentMessage != null && !agentMessage.isBlank();
+                            response.setPromptVersions(chat.getPromptVersions());
+                        } catch (LlmUnavailableException e) {
+                            agentMessage = fallbackMessage(result);
+                        } catch (RuntimeException e) {
+                            agentMessage = fallbackMessage(result);
+                        }
                     }
-                    try {
-                        ChatResponse chat = chatService.continueAfterProfileDecision(userId, context);
-                        agentMessage = chat.getContent();
-                        agentAnswered = agentMessage != null && !agentMessage.isBlank();
-                        response.setPromptVersions(chat.getPromptVersions());
-                    } catch (LlmUnavailableException e) {
-                        agentMessage = fallbackMessage(result);
-                    } catch (RuntimeException e) {
-                        agentMessage = fallbackMessage(result);
-                    }
+                } finally {
+                    concurrencyGuard.release(userId);
                 }
             }
         } else {

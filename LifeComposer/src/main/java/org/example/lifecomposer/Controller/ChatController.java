@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.example.lifecomposer.Entity.ChatMessage;
 import org.example.lifecomposer.Entity.User;
 import org.example.lifecomposer.Repository.UserRepository;
+import org.example.lifecomposer.Service.ChatConcurrencyGuard;
 import org.example.lifecomposer.Service.ChatQuotaDecision;
 import org.example.lifecomposer.Service.ChatQuotaService;
 import org.example.lifecomposer.Service.ChatService;
@@ -29,6 +30,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -42,17 +45,20 @@ public class ChatController {
     private final ExecutorService chatStreamExecutor;
     private final ChatQuotaService chatQuotaService;
     private final AppSecurityProperties securityProperties;
+    private final ChatConcurrencyGuard concurrencyGuard;
 
     public ChatController(ChatService chatService,
                           UserRepository userRepository,
                           @Qualifier("chatStreamExecutor") ExecutorService chatStreamExecutor,
                           ChatQuotaService chatQuotaService,
-                          AppSecurityProperties securityProperties) {
+                          AppSecurityProperties securityProperties,
+                          ChatConcurrencyGuard concurrencyGuard) {
         this.chatService = chatService;
         this.userRepository = userRepository;
         this.chatStreamExecutor = chatStreamExecutor;
         this.chatQuotaService = chatQuotaService;
         this.securityProperties = securityProperties;
+        this.concurrencyGuard = concurrencyGuard;
     }
 
     @PostMapping("/send")
@@ -62,11 +68,16 @@ public class ChatController {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "未登录"));
         }
-        ChatQuotaDecision quota = chatQuotaService.tryConsume(userId);
-        if (!quota.allowed()) {
-            return quotaResponse(quota);
+        // v0.1.2: take the per-user slot before consuming quota, so a rejected
+        // concurrent request costs nothing.
+        if (!concurrencyGuard.tryAcquire(userId)) {
+            return inProgressResponse();
         }
         try {
+            ChatQuotaDecision quota = chatQuotaService.tryConsume(userId);
+            if (!quota.allowed()) {
+                return quotaResponse(quota);
+            }
             ChatResponse response = chatService.sendMessage(
                     userId, request.getMessage(), effectiveMaxTokens(request.getMaxTokens()));
             return ResponseEntity.ok(response);
@@ -74,6 +85,8 @@ public class ChatController {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                     "error", e.getCode(),
                     "message", "LLM 不可用，请稍后重试"));
+        } finally {
+            concurrencyGuard.release(userId);
         }
     }
 
@@ -84,32 +97,81 @@ public class ChatController {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "未登录"));
         }
-        ChatQuotaDecision quota = chatQuotaService.tryConsume(userId);
+        if (!concurrencyGuard.tryAcquire(userId)) {
+            return inProgressResponse();
+        }
+        // From here the slot is released by exactly one owner: this thread on
+        // every early return, otherwise the stream task's finally block.
+        ChatQuotaDecision quota;
+        try {
+            quota = chatQuotaService.tryConsume(userId);
+        } catch (RuntimeException e) {
+            concurrencyGuard.release(userId);
+            throw e;
+        }
         if (!quota.allowed()) {
+            concurrencyGuard.release(userId);
             return quotaResponse(quota);
         }
 
         int maxTokens = effectiveMaxTokens(request.getMaxTokens());
         SseEmitter emitter = new SseEmitter(securityProperties.getSseTimeoutMillis());
-        chatStreamExecutor.execute(() -> {
+        try {
+            chatStreamExecutor.execute(() -> runStream(userId, request, maxTokens, emitter));
+        } catch (RejectedExecutionException e) {
+            // v0.1.2: bounded executor is full. The request never reached the
+            // model, so give back the quota as well as the slot.
+            concurrencyGuard.release(userId);
+            chatQuotaService.refund(userId);
+            LOG.warn("Chat stream rejected for user {}: executor saturated", userId);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                    "error", "CHAT_SERVER_BUSY",
+                    "message", "当前对话人数较多，请稍后重试"));
+        }
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .body(emitter);
+    }
+
+    private void runStream(Integer userId, ChatRequest request, int maxTokens, SseEmitter emitter) {
+        // The slot is released once, before the terminal event is sent, so a
+        // client that starts its next turn as soon as it sees "done"/"error" is
+        // never refused with CHAT_IN_PROGRESS. The flag stops a second release
+        // from freeing a slot that a newer request already holds.
+        AtomicBoolean released = new AtomicBoolean(false);
+        Runnable releaseSlot = () -> {
+            if (released.compareAndSet(false, true)) {
+                concurrencyGuard.release(userId);
+            }
+        };
+        try {
             SseAgentEventListener listener = new SseAgentEventListener(emitter);
             try {
                 chatService.streamMessage(userId, request.getMessage(), listener, maxTokens);
+                releaseSlot.run();
                 send(emitter, "done", Map.of());
                 emitter.complete();
             } catch (ClientDisconnectedException e) {
                 LOG.info("SSE client disconnected during chat stream for user {}", userId);
+                releaseSlot.run();
                 emitter.completeWithError(e);
             } catch (LlmUnavailableException e) {
+                releaseSlot.run();
                 completeWithErrorEvent(emitter, e.getCode(), "LLM 不可用，请稍后重试");
             } catch (Exception e) {
                 LOG.error("Chat stream failed for user {}: {}", userId, e.getMessage(), e);
+                releaseSlot.run();
                 completeWithErrorEvent(emitter, "INTERNAL_ERROR", "服务异常，请稍后重试");
             }
-        });
-        return ResponseEntity.ok()
-                .contentType(MediaType.TEXT_EVENT_STREAM)
-                .body(emitter);
+        } finally {
+            releaseSlot.run();
+        }
+    }
+
+    private ResponseEntity<?> inProgressResponse() {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CHAT_IN_PROGRESS",
+                "message", "上一条消息还在处理中，请稍候"));
     }
 
     private ResponseEntity<?> quotaResponse(ChatQuotaDecision quota) {

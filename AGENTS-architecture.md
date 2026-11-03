@@ -77,6 +77,7 @@
 - `OpenAiCompatibleLlmClient` 支持 tools、tool_calls 和 SSE；不要在代码、日志中输出真实 API key。
 - Prompt 文件位于 `src/main/resources/prompts/`，含 `chat_system`、`profile_extraction`、`direction_explanation`、`path_suggestion`；`PromptCatalog`/`PromptComposer` 负责加载和版本记录。
 - Agent 通过白名单工具读取画像、能力、方向、路径、资源、RAG、加分数据并提交推荐反馈；最多 8 轮。工具过程通过 thinking、tool_call、tool_result、token、assistant_message、error、done 等 SSE 事件展示。
+- v0.1.2：`chat_messages` 保留全部历史，发给 LLM 的上下文只取最近 `app.security.chat-context-messages`（默认 15）条用户消息/AI 最终回答（`ChatMessageRepository.findRecentContext`，工具行随窗口发送但不计数）；同一用户同时只允许一个 AI 请求（`ChatConcurrencyGuard`，409 `CHAT_IN_PROGRESS`）；流式线程池有界（`chat-stream-max-concurrent`，满时 503 `CHAT_SERVER_BUSY` 并退还额度）。
 - 画像变更必须先生成 `profile_change_candidates`，客户端确认后才写入画像；确认过程支持过期、并发、冲突和幂等处理。
 - 能力状态是当前画像投影：删技能会删对应标签，但经历对象保留证据；推荐评分输出中文维度，不把内部 `goalRelevance` / `scoreBreakdown` 字段名直接展示给用户。
 

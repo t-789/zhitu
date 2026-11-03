@@ -18,6 +18,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 class ChatQuotaControllerTest extends BaseControllerTest {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.example.lifecomposer.Service.ChatConcurrencyGuard chatConcurrencyGuard;
+
     @Test
     void minuteLimitRejectsThirdRequestWithinWindow() throws Exception {
         MockHttpSession session = registerAndLogin("quotauser1", "testpass123");
@@ -58,6 +61,8 @@ class ChatQuotaControllerTest extends BaseControllerTest {
                         .content("{\"message\":\"流式1\"}"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted());
+        // v0.1.2: one AI request per user; wait for the first stream to finish.
+        awaitChatSlotFree(session);
 
         mockMvc.perform(post("/api/chat/stream")
                         .session(session)
@@ -66,6 +71,7 @@ class ChatQuotaControllerTest extends BaseControllerTest {
                         .content("{\"message\":\"流式2\"}"))
                 .andExpect(status().isOk())
                 .andExpect(request().asyncStarted());
+        awaitChatSlotFree(session);
 
         mockMvc.perform(post("/api/chat/stream")
                         .session(session)
@@ -126,6 +132,16 @@ class ChatQuotaControllerTest extends BaseControllerTest {
                 .header("User-Agent", "TestClient/1.0")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"message\":\"配额测试\"}"));
+    }
+
+    private void awaitChatSlotFree(MockHttpSession session) {
+        if (!(session.getAttribute("user") instanceof org.example.lifecomposer.Entity.User user)) {
+            return;
+        }
+        long deadline = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        while (chatConcurrencyGuard.isActive(user.getId()) && System.nanoTime() < deadline) {
+            Thread.onSpinWait();
+        }
     }
 
     private int usageCount(MockHttpSession session) {

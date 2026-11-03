@@ -125,7 +125,7 @@ public class AgentOrchestrator {
         PromptComposer.ComposedPrompt prompt = promptComposer.forDecisionContinuation();
         List<LlmChatMessage> messages = new ArrayList<>();
         messages.add(LlmChatMessage.system(prompt.systemPrompt()));
-        messages.addAll(toLlmMessages(chatMessageRepository.findByUserId(userId)));
+        messages.addAll(toLlmMessages(recentContext(userId)));
         messages.add(LlmChatMessage.user(decisionContext));
         java.util.Map<String, String> usedVersions = new LinkedHashMap<>();
         String content = runLoop(userId, messages, NoopAgentEventListener.INSTANCE, false,
@@ -161,11 +161,32 @@ public class AgentOrchestrator {
     private List<LlmChatMessage> prepareConversation(Integer userId, String userMessage,
                                                      PromptComposer.ComposedPrompt prompt) {
         saveMessage(userId, "user", userMessage, null);
-        List<ChatMessage> history = chatMessageRepository.findByUserId(userId);
+        List<ChatMessage> history = recentContext(userId);
         List<LlmChatMessage> messages = new ArrayList<>();
         messages.add(LlmChatMessage.system(prompt.systemPrompt()));
         messages.addAll(toLlmMessages(history));
         return messages;
+    }
+
+    /**
+     * v0.1.2: only the most recent N user/assistant-text messages (plus the tool
+     * exchanges inside that window) are sent to the LLM; the database keeps the
+     * full history. The window is trimmed to start at a user message so the
+     * conversation after the system prompt never opens with an orphan answer or
+     * tool row.
+     */
+    private List<ChatMessage> recentContext(Integer userId) {
+        int limit = Math.max(1, securityProperties.getChatContextMessages());
+        return trimToFirstUserMessage(chatMessageRepository.findRecentContext(userId, limit));
+    }
+
+    private static List<ChatMessage> trimToFirstUserMessage(List<ChatMessage> window) {
+        for (int i = 0; i < window.size(); i++) {
+            if ("user".equals(window.get(i).getRole())) {
+                return i == 0 ? window : new ArrayList<>(window.subList(i, window.size()));
+            }
+        }
+        return List.of();
     }
 
     private String runLoop(Integer userId,

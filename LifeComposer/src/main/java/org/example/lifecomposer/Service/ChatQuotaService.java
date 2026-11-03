@@ -68,6 +68,16 @@ public class ChatQuotaService {
                 minuteLimit, Math.max(0, minuteLimit - 1));
     }
 
+    /**
+     * v0.1.2: give back one admitted request that never reached the model
+     * (e.g. the stream executor was full). Undoes both the daily counter and the
+     * minute token.
+     */
+    public void refund(Integer userId) {
+        usageRepository.decrement(userId, today());
+        minuteRateLimiter.refund(userId);
+    }
+
     /** Admin operation: reset only the current Asia/Shanghai day. */
     public ChatQuotaDecision resetToday(Integer userId) {
         String date = today();

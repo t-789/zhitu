@@ -71,9 +71,9 @@
 
 | 方法 | 路径 | 认证 | 说明 |
 |------|------|------|------|
-| POST | `/api/chat/send` | 已登录 | 兼容旧客户端的一次性 JSON；body `{"message":"...","maxTokens":可选}`（`message` ≤5000 字符；服务端强制 `maxTokens` 上限 1024）。内部复用同一 Agent 多轮 tool-use 逻辑。LLM 不可用时返回 HTTP 503 `{"error":"LLM_UNAVAILABLE",...}`；超过分钟/日额度返回 HTTP 429，body 含 `retryAfterSeconds` / `remainingToday` / `minuteRemaining` 等 |
-| POST | `/api/chat/stream` | 已登录 | SSE 流式对话。事件：`prompt_versions` / `thinking_start` / `thinking_tick`(可选) / `thinking_end` / `tool_call` / `tool_result` / `token` / `assistant_message` / `profile_change_proposal` / `awaiting_confirmation` / `error` / `done`；准入失败返回 HTTP 429 JSON 而不是 SSE。提议画像变更时本轮以 `awaiting_confirmation` 结束，不等待用户点击 |
-| GET | `/api/chat/history` | 已登录 | 获取当前用户的对话历史（`chat_messages` 按时间稳定排序）；包含 user / assistant / tool 行 |
+| POST | `/api/chat/send` | 已登录 | 兼容旧客户端的一次性 JSON；body `{"message":"...","maxTokens":可选}`（`message` ≤5000 字符；服务端强制 `maxTokens` 上限 2048）。内部复用同一 Agent 多轮 tool-use 逻辑。LLM 不可用时返回 HTTP 503 `{"error":"LLM_UNAVAILABLE",...}`；同一用户已有 AI 请求在处理时返回 HTTP 409 `{"error":"CHAT_IN_PROGRESS",...}`（不扣额度）；超过分钟/日额度返回 HTTP 429，body 含 `retryAfterSeconds` / `remainingToday` / `minuteRemaining` 等 |
+| POST | `/api/chat/stream` | 已登录 | SSE 流式对话。事件：`prompt_versions` / `thinking_start` / `thinking_tick`(可选) / `thinking_end` / `tool_call` / `tool_result` / `token` / `assistant_message` / `profile_change_proposal` / `awaiting_confirmation` / `error` / `done`；准入失败返回 JSON 而不是 SSE：额度不足 429；同一用户已有 AI 请求在处理 409 `CHAT_IN_PROGRESS`（不扣额度）；全局流式并发已满 503 `CHAT_SERVER_BUSY`（额度退还）。提议画像变更时本轮以 `awaiting_confirmation` 结束，不等待用户点击 |
+| GET | `/api/chat/history` | 已登录 | 获取当前用户的**全部**对话历史（`chat_messages` 按时间稳定排序）；包含 user / assistant / tool 行。不受 LLM 上下文窗口限制 |
 | DELETE | `/api/chat/context` | 已登录 | 清除当前用户的对话上下文（**物理删除**，会影响后续 LLM 上下文），返回 `{"deleted": n}` |
 
 > **v0.0.4 说明**：`/api/chat/*` 不使用 fallback 或 mock 回复。API key 缺失、HTTP 非 2xx、超时、格式错误、流中断均视为 `LLM_UNAVAILABLE`；SSE 发送 `error` 事件后关闭。一次工具调用会持久化两条 `chat_messages`：assistant 的 tool_call JSON 和 tool 的 tool_result JSON。工具调用超过 8 轮时以 `MAX_TOOL_ROUNDS` 失败。
@@ -87,8 +87,13 @@
 > **v0.0.5 配额说明**：
 > - 每个已认证用户每分钟最多 5 次聊天，每天（Asia/Shanghai）最多 100 次；`/api/chat/send` 与 `/api/chat/stream` 每次请求只计一次。
 > - 被 429 拒绝的请求不扣减日额度；LLM 失败、SSE 中断和客户端断开仍保留已准入请求的用量，避免通过失败绕过限额。
-> - 服务端强制 `max_tokens=1024`；客户端传入更大的 `maxTokens` 会被截断。
+> - 服务端强制 `max_tokens=2048`（v0.1.2 起，原为 1024）；客户端传入更大的 `maxTokens` 会被截断。
 > - 管理员可用 `POST /api/users/admin/chat-quota/reset/{userId}` 重置当前自然日额度，并写入审计日志。
+>
+> **v0.1.2 上下文与并发说明**：
+> - 数据库保留全部历史；每次调用 LLM 只发送最近 `app.security.chat-context-messages`（默认 15）条**用户消息与 AI 最终回答**，窗口内这些轮次的 tool_call/tool_result 一并发送但不计数。窗口总是从一条用户消息开始；当前这条用户消息计入窗口。画像确认后的续答使用同一窗口。
+> - 同一用户同时只允许一个 AI 请求（`/api/chat/send`、`/api/chat/stream`、画像确认续答共用）；先占位再扣额度，被拒绝的并发请求不扣额度。画像确认时如遇占用，决定照常写入，仅跳过续答（`agentAnswered=false`）。
+> - 流式对话全局最多 `app.security.chat-stream-max-concurrent`（默认 32）个同时运行，无排队；已满时返回 503 `CHAT_SERVER_BUSY` 并退还额度。以上均为单实例内存实现。
 
 ## 画像变更确认（v0.1 M2）
 

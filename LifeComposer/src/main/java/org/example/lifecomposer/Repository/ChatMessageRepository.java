@@ -94,6 +94,36 @@ public class ChatMessageRepository {
                 ROW_MAPPER, userId);
     }
 
+    /**
+     * Prefix of every persisted assistant tool_call row. AgentOrchestrator builds
+     * that payload with "type" as the first key; a test pins this contract.
+     */
+    public static final String TOOL_CALL_CONTENT_PREFIX = "{\"type\":\"tool_call\"";
+
+    /**
+     * v0.1.2: the LLM context window. Returns the rows starting at the
+     * {@code limit}-th most recent "conversation" message (a user message or an
+     * assistant final answer), including the tool_call / tool rows that follow
+     * it. Tool rows are not counted. With fewer conversation messages than
+     * {@code limit}, the whole history is returned. The full history stays in
+     * the table; {@link #findByUserId} is unchanged.
+     */
+    public List<ChatMessage> findRecentContext(Integer userId, int limit) {
+        int safeLimit = Math.max(1, limit);
+        return jdbcTemplate.query("""
+                        SELECT * FROM chat_messages
+                        WHERE user_id = ? AND id >= COALESCE((
+                            SELECT id FROM chat_messages
+                            WHERE user_id = ?
+                              AND (role = 'user'
+                                   OR (role = 'assistant' AND content NOT LIKE ?))
+                            ORDER BY create_time DESC, id DESC
+                            LIMIT 1 OFFSET ?), 0)
+                        ORDER BY create_time ASC, id ASC
+                        """,
+                ROW_MAPPER, userId, userId, TOOL_CALL_CONTENT_PREFIX + "%", safeLimit - 1);
+    }
+
     public int deleteByUserId(Integer userId) {
         return jdbcTemplate.update("DELETE FROM chat_messages WHERE user_id = ?", userId);
     }

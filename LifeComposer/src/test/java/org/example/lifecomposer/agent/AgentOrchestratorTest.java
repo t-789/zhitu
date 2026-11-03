@@ -21,7 +21,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -244,7 +246,7 @@ class AgentOrchestratorTest {
 
         orchestrator.sendMessage(1, "hi", 9999);
 
-        assertEquals(1024, client.requests.get(0).getMaxTokens());
+        assertEquals(2048, client.requests.get(0).getMaxTokens());
     }
 
     @Test
@@ -319,6 +321,8 @@ class AgentOrchestratorTest {
     private ChatMessageRepository mockRepository(List<ChatMessage> stored) {
         ChatMessageRepository repository = mock(ChatMessageRepository.class);
         when(repository.findByUserId(1)).thenAnswer(invocation -> new ArrayList<>(stored));
+        when(repository.findRecentContext(eq(1), anyInt()))
+                .thenAnswer(invocation -> recentWindow(stored, invocation.getArgument(1)));
         when(repository.saveMessage(any(ChatMessage.class))).thenAnswer(invocation -> {
             ChatMessage message = invocation.getArgument(0);
             message.setId(stored.size() + 1);
@@ -334,6 +338,151 @@ class AgentOrchestratorTest {
             return null;
         }).when(repository).saveMessages(anyList());
         return repository;
+    }
+
+    /** Mirrors ChatMessageRepository.findRecentContext over the in-memory rows. */
+    private static List<ChatMessage> recentWindow(List<ChatMessage> stored, int limit) {
+        int counted = 0;
+        for (int i = stored.size() - 1; i >= 0; i--) {
+            ChatMessage message = stored.get(i);
+            boolean conversation = "user".equals(message.getRole())
+                    || ("assistant".equals(message.getRole())
+                    && !message.getContent().startsWith(ChatMessageRepository.TOOL_CALL_CONTENT_PREFIX));
+            if (conversation && ++counted == Math.max(1, limit)) {
+                return new ArrayList<>(stored.subList(i, stored.size()));
+            }
+        }
+        return new ArrayList<>(stored);
+    }
+
+    private static ChatMessage row(String role, String content) {
+        ChatMessage message = new ChatMessage();
+        message.setUserId(1);
+        message.setRole(role);
+        message.setContent(content);
+        return message;
+    }
+
+    private static String toolCallRow(String turnId, String callId, String name) {
+        return "{\"type\":\"tool_call\",\"turnId\":\"" + turnId + "\",\"name\":\"" + name
+                + "\",\"callId\":\"" + callId + "\",\"arguments\":{}}";
+    }
+
+    private static String toolResultRow(String turnId, String callId) {
+        return "{\"type\":\"tool_result\",\"turnId\":\"" + turnId + "\",\"callId\":\"" + callId
+                + "\",\"ok\":true,\"data\":{}}";
+    }
+
+    /** 20 past turns; every even turn calls one tool before answering. */
+    private static List<ChatMessage> longHistory() {
+        List<ChatMessage> stored = new ArrayList<>();
+        for (int turn = 0; turn < 20; turn++) {
+            stored.add(row("user", "问题" + turn));
+            if (turn % 2 == 0) {
+                stored.add(row("assistant", toolCallRow("t" + turn, "c" + turn, "search_resources")));
+                stored.add(row("tool", toolResultRow("t" + turn, "c" + turn)));
+            }
+            stored.add(row("assistant", "回答" + turn));
+        }
+        for (int i = 0; i < stored.size(); i++) {
+            stored.get(i).setId(i + 1);
+        }
+        return stored;
+    }
+
+    private static long conversationCount(List<LlmChatMessage> messages) {
+        return messages.stream()
+                .filter(m -> "user".equals(m.getRole())
+                        || ("assistant".equals(m.getRole()) && m.getToolCalls() == null))
+                .count();
+    }
+
+    @Test
+    void sendsOnlyTheConfiguredNumberOfRecentMessagesToTheLlm() {
+        List<ChatMessage> stored = longHistory();
+        ChatMessageRepository repository = mockRepository(stored);
+        ScriptedLlmClient client = new ScriptedLlmClient(List.of(textResponse("ok")));
+        LlmClientFactory factory = mock(LlmClientFactory.class);
+        when(factory.getClient("chat")).thenReturn(client);
+
+        AgentOrchestrator orchestrator = new AgentOrchestrator(
+                repository, factory, new ToolRegistry(List.of()), new AppSecurityProperties());
+        orchestrator.sendMessage(1, "最新问题");
+
+        List<LlmChatMessage> sent = client.requests.get(0).getMessages();
+        assertEquals("system", sent.get(0).getRole());
+        assertEquals("user", sent.get(1).getRole(), "窗口必须从用户消息开始");
+        assertEquals(15, conversationCount(sent));
+        assertEquals("最新问题", sent.get(sent.size() - 1).getContent());
+        assertTrue(sent.stream().noneMatch(m -> "问题0".equals(m.getContent())), "旧消息不应发送");
+
+        // Tool exchanges inside the window stay paired: every tool_calls message
+        // is immediately followed by its tool result.
+        for (int i = 0; i < sent.size(); i++) {
+            if (sent.get(i).getToolCalls() != null) {
+                assertEquals("tool", sent.get(i + 1).getRole());
+                assertEquals(sent.get(i).getToolCalls().get(0).getId(), sent.get(i + 1).getToolCallId());
+            }
+        }
+        assertTrue(sent.stream().anyMatch(m -> m.getToolCalls() != null), "窗口内的工具调用应保留");
+        // The database still keeps the full history plus the new turn.
+        assertEquals(longHistory().size() + 2, stored.size());
+    }
+
+    @Test
+    void contextWindowBelowOneIsTreatedAsOne() {
+        List<ChatMessage> stored = longHistory();
+        ChatMessageRepository repository = mockRepository(stored);
+        ScriptedLlmClient client = new ScriptedLlmClient(List.of(textResponse("ok")));
+        LlmClientFactory factory = mock(LlmClientFactory.class);
+        when(factory.getClient("chat")).thenReturn(client);
+        AppSecurityProperties properties = new AppSecurityProperties();
+        properties.setChatContextMessages(0);
+
+        new AgentOrchestrator(repository, factory, new ToolRegistry(List.of()), properties)
+                .sendMessage(1, "只有这一条");
+
+        List<LlmChatMessage> sent = client.requests.get(0).getMessages();
+        assertEquals(2, sent.size());
+        assertEquals("只有这一条", sent.get(1).getContent());
+    }
+
+    @Test
+    void continuationAfterProfileDecisionStillSeesTheProposalExchange() {
+        List<ChatMessage> stored = longHistory();
+        stored.add(row("user", "我会 Python"));
+        stored.add(row("assistant", toolCallRow("tp", "cp", "propose_profile_update")));
+        stored.add(row("tool", toolResultRow("tp", "cp")));
+        ChatMessageRepository repository = mockRepository(stored);
+        ScriptedLlmClient client = new ScriptedLlmClient(List.of(textResponse("已更新")));
+        LlmClientFactory factory = mock(LlmClientFactory.class);
+        when(factory.getClient("chat")).thenReturn(client);
+
+        new AgentOrchestrator(repository, factory, new ToolRegistry(List.of()), new AppSecurityProperties())
+                .continueAfterProfileDecision(1, "用户已确认");
+
+        List<LlmChatMessage> sent = client.requests.get(0).getMessages();
+        assertTrue(sent.stream().anyMatch(m -> m.getToolCalls() != null
+                && "propose_profile_update".equals(m.getToolCalls().get(0).name())));
+        assertTrue(sent.stream().anyMatch(m -> "tool".equals(m.getRole()) && "cp".equals(m.getToolCallId())));
+        assertEquals("用户已确认", sent.get(sent.size() - 1).getContent());
+        assertEquals(15, conversationCount(sent) - 1, "续答上下文本身不计入窗口");
+    }
+
+    @Test
+    void persistedToolCallPayloadStartsWithTheRepositoryPrefix() {
+        List<ChatMessage> stored = new ArrayList<>();
+        ChatMessageRepository repository = mockRepository(stored);
+        ScriptedLlmClient client = new ScriptedLlmClient(List.of(toolCallResponse(), textResponse("ok")));
+        LlmClientFactory factory = mock(LlmClientFactory.class);
+        when(factory.getClient("chat")).thenReturn(client);
+
+        new AgentOrchestrator(repository, factory,
+                new ToolRegistry(List.of(new FakeSearchResourcesTool())), new AppSecurityProperties())
+                .sendMessage(1, "找资源");
+
+        assertTrue(stored.get(1).getContent().startsWith(ChatMessageRepository.TOOL_CALL_CONTENT_PREFIX),
+                "findRecentContext 依赖 tool_call 行以该前缀开头");
     }
 
     private LlmResponseDto proposeToolCallResponse() {

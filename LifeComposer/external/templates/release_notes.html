@@ -198,6 +198,46 @@
       ============================================================
     -->
 
+    <!-- ========== v0.1.2 ========== -->
+    <div class="container">
+        <h1>v0.1.2 — P0 整改：聊天上下文窗口、单用户并发与流式线程池上限</h1>
+        <p><em>2026 年 11 月 3 日</em></p>
+
+        <div class="stats-grid">
+            <div class="stat-item"><span class="stat-num">4</span><span class="stat-label">P0 问题修复</span></div>
+            <div class="stat-item"><span class="stat-num">15</span><span class="stat-label">LLM 上下文消息数</span></div>
+            <div class="stat-item"><span class="stat-num">2048</span><span class="stat-label">max_tokens 上限</span></div>
+            <div class="stat-item"><span class="stat-num">12</span><span class="stat-label">新增自动化测试</span></div>
+            <div class="stat-item"><span class="stat-num">402</span><span class="stat-label">自动化测试</span></div>
+        </div>
+
+        <div class="improvement-list">
+            <h3>本版本只修复审核报告中的 P0 问题</h3>
+            <p>依据 <code>CLAUDE_ADVICE.md</code> 与 <code>plans/Plan-v0.1.2.md</code>；不改推荐算法、不做多会话。</p>
+        </div>
+
+        <h2>测试基线恢复全绿</h2>
+        <ul>
+            <li>聊天 <code>max_tokens</code> 上限统一为 2048：配置文件、测试配置、单元测试和 API 文档与 <code>AppSecurityProperties</code> 默认值一致（此前 1024 不够用时只改了一处）。</li>
+            <li><code>LifeComposerApplicationTests</code> 补上 <code>@ActiveProfiles("test")</code>，不再在生产 <code>data.db</code> 上执行建表/迁移。</li>
+        </ul>
+
+        <h2>LLM 上下文窗口</h2>
+        <ul>
+            <li>数据库保留全部聊天历史；调用 LLM 时只发送最近 15 条用户消息与 AI 最终回答，由 <code>app.security.chat-context-messages</code> 控制。</li>
+            <li>窗口内的工具调用与结果随之发送但不计数，保持协议配对；窗口总是从用户消息开始；画像确认续答仍能看到提议记录。</li>
+            <li><code>/api/chat/history</code> 仍返回全部历史。</li>
+        </ul>
+
+        <h2>单用户并发与流式线程池</h2>
+        <ul>
+            <li>同一用户同时只允许一个 AI 请求（发送、流式、画像确认续答共用），否则返回 409 <code>CHAT_IN_PROGRESS</code>；先占位再扣额度，被拒绝的请求不扣额度。</li>
+            <li>流式线程池改为有界（默认 32，<code>app.security.chat-stream-max-concurrent</code>），无排队；已满返回 503 <code>CHAT_SERVER_BUSY</code> 并退还额度。</li>
+        </ul>
+
+        <a class="back-link" href="/">返回首页</a>
+    </div>
+
     <!-- ========== v0.1 ========== -->
     <div class="container">
         <h1>v0.1 — 业务闭环：画像确认 → 能力归一 → 方向与路径推荐 → Agent 解释与反馈</h1>

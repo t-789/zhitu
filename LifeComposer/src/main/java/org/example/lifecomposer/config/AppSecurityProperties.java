@@ -39,6 +39,16 @@ public class AppSecurityProperties {
     /** Maximum generated tokens for /api/chat/*; larger client values are truncated. */
     private int chatMaxOutputTokens = 2048;
 
+    /**
+     * v0.1.2: how many recent user/assistant-text messages are sent to the LLM.
+     * Tool-call/tool-result rows inside that window are included but not counted.
+     * The full history stays in chat_messages; values below 1 are treated as 1.
+     */
+    private int chatContextMessages = 15;
+
+    /** v0.1.2: maximum concurrently running SSE chat streams across all users. */
+    private int chatStreamMaxConcurrent = 32;
+
     /** SSE emitter timeout. */
     private long sseTimeoutMillis = 300_000L;
 

@@ -37,7 +37,7 @@
 - **Embedding**：本地 Ollama `quentinz/bge-small-zh-v1.5:f16`，固定 `POST /v1/embeddings`，向量存 SQLite JSON
 - **生成式 LLM**：v0.0.4 起默认统一切换 DeepSeek `deepseek-flash`；`/api/chat/*` 不使用 fallback
 - **Agent**：多轮 tool-use（白名单只读工具）+ SSE 流式过程展示，v0.0.4 已实现
-- **安全**：v0.0.5 起 CSRF 同步令牌、Session Cookie 加固、注册/登录限速；聊天 5/分钟 + 100/天（Asia/Shanghai）与 `max_tokens=1024`。v0.0.6 起移除固定 `admin/admin`，初始管理员密码只能来自 `LIFECOMPOSER_INITIAL_ADMIN_PASSWORD`（缺失/弱密码 fail-fast）；管理员下发带状态与有效期的临时密码，用户首次登录必须改密，密码变更即销毁该账户的旧会话（`credential_version` 守卫）；最后管理员保护使用原子 SQL 与立即写事务
+- **安全**：v0.0.5 起 CSRF 同步令牌、Session Cookie 加固、注册/登录限速；聊天 5/分钟 + 100/天（Asia/Shanghai）与 `max_tokens=2048`（v0.1.2 起）。v0.0.6 起移除固定 `admin/admin`，初始管理员密码只能来自 `LIFECOMPOSER_INITIAL_ADMIN_PASSWORD`（缺失/弱密码 fail-fast）；管理员下发带状态与有效期的临时密码，用户首次登录必须改密，密码变更即销毁该账户的旧会话（`credential_version` 守卫）；最后管理员保护使用原子 SQL 与立即写事务
 - **运维控制台**：v0.0.6 新增 `/api/admin/**` 只读管理 API（12 张表 + 总览，服务端分页/白名单筛选排序/限流/审计）与 `/admin/**` 统一布局控制台（XSS 安全渲染）
 - **前端**：待定（App / Web）；管理端控制台（v0.0.6）已就绪
 
@@ -53,6 +53,7 @@
 | v0.0.6 | 2026-09-14 | Milestone 6 管理员初始化与密码安全整改 + Milestone 7 数据库管理与调试控制台（`/api/admin/**` 只读 API + `/admin/**` 统一布局控制台）；审查整改：真正的临时密码（状态/有效期/强制修改/旧会话失效）、并发安全的最后管理员保护、管理员信任模型确认 ✅ |
 | v0.1 | 2026-09-23 | 业务闭环：正式画像 + 聊天候选确认、提示词目录、能力归一/能力状态、方向与路径推荐、Agent 只读工具与推荐反馈、`chat_test` 左右分栏调试工作台 ✅ |
 | v0.1.1 | 2026-09-24 起 | 集成知途登录/注册界面；新用户邮箱与姓名，邮箱或用户名登录；普通用户 `/front/login`、`/front/register`，管理端 `/adminlogin`。项目改名清单见 [`plans/Plan-v0.1.1.md`](./plans/Plan-v0.1.1.md) |
+| v0.1.2 | 2026-11-03 | P0 整改：`max_tokens` 统一 2048、测试隔离生产库、LLM 上下文窗口最近 15 条、单用户单请求、有界流式线程池。见 [`plans/Plan-v0.1.2.md`](./plans/Plan-v0.1.2.md) ✅ |
 | v1 | 待定 | 把 `chat_test` 验证过的 SSE/画像/确认卡片/工具与推荐监控迁入正式聊天页；正式用户全流程演示；评分权重人工验收后替换实验默认值 |
 
 ## 与当前代码的关系

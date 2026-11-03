@@ -632,7 +632,11 @@ curl -s -b $JAR -X POST $BASE/api/users/logout -H "X-XSRF-TOKEN: $TOKEN" -H "Use
 **配额（每用户）**：`5 次/分钟` + `100 次/天`（Asia/Shanghai 自然日）。
 `/api/chat/send` 与 `/api/chat/stream` **每次请求各计 1 次**；被 429 拒绝不扣减；LLM 失败/流中断/客户端断开仍保留已准入的用量。
 
-**`max_tokens`**：服务端强制上限 `1024`，客户端传更大值会被截断（下限 1）。
+**`max_tokens`**：服务端强制上限 `2048`，客户端传更大值会被截断（下限 1）。
+
+**上下文窗口（v0.1.2）**：数据库保留全部历史，但发给 LLM 的只有最近 `15` 条用户消息与 AI 最终回答（`app.security.chat-context-messages`），窗口内的工具调用/结果随之发送、不计数。`/api/chat/history` 仍返回全部。
+
+**并发（v0.1.2）**：同一用户同时只允许一个 AI 请求（含画像确认续答），否则 `409 CHAT_IN_PROGRESS`，不扣额度；流式对话全局并发上限 `32`，已满返回 `503 CHAT_SERVER_BUSY` 并退还额度。
 
 #### `POST /api/chat/send` — 非流式对话
 - **认证**：已登录（需 CSRF）
@@ -641,7 +645,7 @@ curl -s -b $JAR -X POST $BASE/api/users/logout -H "X-XSRF-TOKEN: $TOKEN" -H "Use
 | 字段 | 必填 | 约束 |
 |------|------|------|
 | `message` | ✅ | 非空，≤ 5000 字符 |
-| `maxTokens` | ❌ | 整数，服务端截断到 [1, 1024] |
+| `maxTokens` | ❌ | 整数，服务端截断到 [1, 2048] |
 
 - **成功响应** `200`：`ChatResponse`
 
@@ -661,6 +665,7 @@ curl -s -b $JAR -X POST $BASE/api/users/logout -H "X-XSRF-TOKEN: $TOKEN" -H "Use
 |------|--------|------|
 | `400` | `{"message":"消息长度不能超过5000字符"}` | 校验失败 |
 | `403` | — | 未登录 / 缺 CSRF |
+| `409` | `{"error":"CHAT_IN_PROGRESS","message":"上一条消息还在处理中，请稍候"}` | 同一用户已有 AI 请求在处理（不扣额度） |
 | `429` | 见下方配额体 | 分钟或日额度用尽 |
 | `503` | `{"error":"LLM_UNAVAILABLE","message":"LLM 不可用，请稍后重试"}` | API key 缺失 / HTTP 非 2xx / 超时 / 格式错误 |
 | `503` | `{"error":"MAX_TOOL_ROUNDS", ...}` | 工具调用超过 8 轮 |
@@ -687,7 +692,7 @@ curl -s -b $JAR -X POST $BASE/api/users/logout -H "X-XSRF-TOKEN: $TOKEN" -H "Use
 - **请求体**：同 `/api/chat/send`
 - **成功响应** `200`，`Content-Type: text/event-stream`
 
-**准入失败时返回普通 JSON（不是 SSE）**：配额不足返回 `429` + 上述配额体；LLM 不可用则在流内发 `error` 事件。
+**准入失败时返回普通 JSON（不是 SSE）**：配额不足返回 `429` + 上述配额体；同一用户已有请求返回 `409 CHAT_IN_PROGRESS`；全局流式并发已满返回 `503 {"error":"CHAT_SERVER_BUSY","message":"当前对话人数较多，请稍后重试"}`（额度退还）；LLM 不可用则在流内发 `error` 事件。
 
 **SSE 事件表**（事件名 + `data` 结构）：
 
@@ -1229,7 +1234,9 @@ if (res.status === 429) { /* JSON 配额体，非 SSE */ }
 | `server.port` | `18000` | 服务端口 |
 | `app.security.chat-per-minute` | `5` | 每用户每分钟聊天次数 |
 | `app.security.chat-per-day` | `100` | 每用户每日聊天次数（Asia/Shanghai） |
-| `app.security.chat-max-output-tokens` | `1024` | 服务端强制 `max_tokens` 上限 |
+| `app.security.chat-max-output-tokens` | `2048` | 服务端强制 `max_tokens` 上限 |
+| `app.security.chat-context-messages` | `15` | 发给 LLM 的最近用户/回答消息条数（工具行不计数；<1 按 1） |
+| `app.security.chat-stream-max-concurrent` | `32` | 全局同时运行的流式对话上限，无排队 |
 | `app.security.sse-timeout-millis` | `300000` | SSE 超时（5 分钟） |
 | `app.security.register-per-minute-per-ip` | `10` | 注册限速（每 IP/分钟） |
 | `app.security.login-max-failures` | `5` | 登录连续失败锁定阈值 |
@@ -1276,6 +1283,8 @@ LLM 按用途分组配置（`qa` / `planning` / `profile` / `sql` / `chat`），
 | `UNAUTHORIZED` | 401 | 自助改密 | 会话缺失 |
 | `CHAT_MINUTE_LIMIT` | 429 | chat/send、chat/stream | 分钟额度用尽 |
 | `CHAT_DAILY_LIMIT` | 429 | chat/send、chat/stream | 当日额度用尽 |
+| `CHAT_IN_PROGRESS` | 409 | chat/send、chat/stream | 同一用户已有 AI 请求在处理，不扣额度 |
+| `CHAT_SERVER_BUSY` | 503 | chat/stream | 全局流式并发已满，额度已退还 |
 | `LLM_UNAVAILABLE` | 503 / SSE error | chat/* | LLM 不可用（无 fallback） |
 | `MAX_TOOL_ROUNDS` | 503 / SSE error | chat/* | 工具调用超过 8 轮 |
 | `INTERNAL_ERROR` | SSE error | chat/stream | 服务端异常 |
