@@ -46,7 +46,10 @@ public class LoginAttemptService {
         return Math.max(1L, (attempt.lockedUntil() - now + 999) / 1000);
     }
 
-    public void recordFailure(String username, String clientIp) {
+    /**
+     * 记一次失败，返回累计失败次数（含本次），供审计日志写"累计失败 N 次"。
+     */
+    public int recordFailure(String username, String clientIp) {
         String attemptKey = key(username, clientIp);
         LoginAttemptRepository.Attempt existing = repository.find(attemptKey).orElse(null);
         int failures = (existing == null ? 0 : existing.failures()) + 1;
@@ -54,6 +57,17 @@ public class LoginAttemptService {
                 ? System.currentTimeMillis() + properties.getLoginLockMillis()
                 : 0L;
         repository.upsert(attemptKey, failures, lockedUntil);
+        return failures;
+    }
+
+    /** 当前累计失败次数（未锁定或未记录时为 0）。 */
+    public int failureCount(String username, String clientIp) {
+        return repository.find(key(username, clientIp)).map(LoginAttemptRepository.Attempt::failures).orElse(0);
+    }
+
+    /** 触发锁定的失败次数阈值，供审计日志判断本次是否"触发锁定"。 */
+    public int maxFailures() {
+        return properties.getLoginMaxFailures();
     }
 
     public void recordSuccess(String username, String clientIp) {
