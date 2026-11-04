@@ -68,8 +68,11 @@ public class AuthController {
         }
         String clientIp = httpRequest.getRemoteAddr();
         if (!registrationRateLimiter.tryAcquire(clientIp, securityProperties.getRegisterPerMinutePerIp())) {
-            LOG.warn("AUDIT event=register_rate_limited ip={}", clientIp);
-            return fail(HttpStatus.TOO_MANY_REQUESTS, 429, "注册请求过于频繁，请稍后再试");
+            long retryAfter = Math.max(1L, registrationRateLimiter.retryAfterSeconds(clientIp));
+            LOG.warn("AUDIT event=register_rate_limited ip={} retryAfterSeconds={}", clientIp, retryAfter);
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", String.valueOf(retryAfter))
+                    .body(ApiEnvelope.of(429, "注册请求过于频繁，请稍后再试"));
         }
         String studentId = request.getStudentId().trim();
         boolean created = userService.register(studentId, studentId, request.getPassword(),
