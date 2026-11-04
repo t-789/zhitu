@@ -131,6 +131,17 @@ public class LoginLogRepository {
         return rows.isEmpty() ? Optional.empty() : Optional.of(rows.get(0));
     }
 
+    /**
+     * 清理超过保留期的审计行（审核 B2：匿名请求也会写一行，没有保留期会把表撑大）。
+     *
+     * @return 删除行数
+     */
+    public int deleteOlderThan(int retentionDays) {
+        int days = Math.max(1, retentionDays);
+        return jdbcTemplate.update(
+                "DELETE FROM login_log WHERE created_at <= datetime('now', ?)", "-" + days + " days");
+    }
+
     private static String truncate(String value, int max) {
         if (value == null) {
             return null;
