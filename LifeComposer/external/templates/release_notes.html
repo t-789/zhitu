@@ -198,9 +198,9 @@
       ============================================================
     -->
 
-    <!-- ========== v0.1.5 ========== -->
+    <!-- ========== v0.1.9 ========== -->
     <div class="container">
-        <h1>v0.1.5 — 登录安全模块：锁定落库、分层阈值、审计与重定向加固</h1>
+        <h1>v0.1.9 — 登录安全模块：分层锁定、可信 IP、审计脱敏与部署说明</h1>
         <p><em>2026 年 11 月 4 日</em></p>
 
         <div class="stats-grid">
@@ -217,15 +217,18 @@
 
         <h2>锁定策略：从“只按账号”改为两层</h2>
         <ul>
-            <li><b>第一层 账号+IP</b>：同一账号在同一 IP 连续失败 5 次锁 15 分钟——攻击者只能锁住自己那对组合，锁不住受害者在别处的登录。</li>
-            <li><b>第二层 账号总量</b>：同一账号 1 小时内累计失败 30 次（不分 IP）锁 30 分钟——分布式猜密码要换很多 IP 才会撞上，同时抬高用大量 IP 封人的门槛。</li>
-            <li><b>管理员豁免</b>：<code>users.type = 2</code> 默认只受第一层约束，避免外网把管理员账号锁死。</li>
+            <li><b>第一层 账号+IP</b>：同一账号在同一 IP 的窗口内连续失败 5 次锁 15 分钟——攻击者只能锁住自己那对组合，锁不住受害者在别处的登录。</li>
+            <li><b>第二层 账号总量</b>：同一账号 1 小时内累计失败 30 次（不分 IP）锁 30 分钟。</li>
+            <li><b>可信 IP 豁免</b>：第二层锁住时，<b>不拒绝该账号近 30 天内成功登录过的 IP</b>——攻击者用两个 IP 把账号推进第二层，受害者从自己常用网络仍能登录。</li>
+            <li><b>管理员</b>：<code>users.type = 2</code> 仍然计入账号总量，但超阈值<b>只告警不上锁</b>；生产环境必须同时打开 <code>app.security.admin-intranet-only=true</code>。</li>
+            <li><b>IPv6 归一</b>：一个 <code>/64</code> 通常就是一个用户网络，第一层的 IP 维度归一到 <code>/64</code>，换地址不算换 key。</li>
+            <li><b>第一层计数窗口</b>：60 分钟内没有新失败就从 1 重新计数，几周里零星错几次不会被锁。</li>
             <li>两层阈值、时长、窗口、是否对管理员启用第二层全部可配置；某层时长配 <code>0</code> 即关闭该层锁定。</li>
         </ul>
 
         <h2>持久化与审计</h2>
         <ul>
-            <li>新增 <code>login_attempt</code> 表（<code>(scope, attempt_key)</code> 主键，<code>pair</code> / <code>account</code> 两种 scope），锁定状态进程重启后仍然生效；旧表结构启动时自动迁移。</li>
+            <li>新增 <code>login_attempt</code> 表（<code>(scope, attempt_key)</code> 主键，<code>pair</code> / <code>account</code> 两种 scope），锁定状态进程重启后仍然生效；旧表结构启动时在<b>单个事务</b>里迁移，中途崩溃不会留下孤儿表。</li>
             <li>新增 <code>login_log</code> 审计表，成功与失败都落库，含 IP、User-Agent、失败原因。</li>
             <li>计数改为单条 <code>INSERT ... ON CONFLICT ... RETURNING</code>，并发失败不再丢计数（原实现写的是绝对值）。</li>
             <li>时间戳统一为 UTC 文本，与 v0.1.3 的约定一致。</li>
@@ -236,7 +239,7 @@
         <ul>
             <li>封禁判断移到密码校验之后，账号不存在时也执行一次哈希比对：错误密码与不存在账号的响应、耗时都一致。</li>
             <li>封禁响应不再回显解封时间（原 <code>账户被封禁至…</code> 改为 <code>账户已被封禁，请联系管理员</code>）。</li>
-            <li>审计清洗 <code>AuditSanitizer</code>：日志字段剔除控制字符（防 CRLF 伪造日志行），不像账号的输入（如误把密码填进账号框）存为 <code>&lt;masked:xxxxxxxx&gt;</code>。</li>
+            <li>审计清洗 <code>AuditSanitizer</code>：日志字段剔除控制字符（防 CRLF 伪造日志行）；<b>账号不存在时一律存 <code>&lt;masked:xxxxxxxx&gt;</code></b>（原实现按"长得像不像账号"判断，挡不住 <code>abc12345</code> 这类符合注册规则的密码）。</li>
             <li><code>SafeRedirect</code> 归一化大小写与尾斜杠，拒绝 <code>%2e</code> 与 <code>.</code>/<code>..</code> 路径段，<code>/front/login/</code> 无法绕过。</li>
             <li>注册限流加 <code>Retry-After</code> 响应头，并定期清理空闲 IP 条目。</li>
         </ul>

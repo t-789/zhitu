@@ -120,6 +120,27 @@ public class LoginLogRepository {
                 account);
     }
 
+    /**
+     * 该账号在最近 {@code days} 天里成功登录过的 IP（去重）。
+     *
+     * <p>用途：第二层（账号总量）锁定不拒绝这些 IP —— 攻击者换 IP 把账号打到
+     * 总量阈值上锁，受害者从自己常用的网络仍然能登录。按 {@code user_id} 查而不是
+     * 按 {@code account} 查，因为审计里的 account 是用户当次输入（学号/邮箱/用户名
+     * 三种都可能），而 user_id 唯一。</p>
+     */
+    public List<String> findRecentSuccessfulIpsByUser(Integer userId, int days) {
+        if (userId == null) {
+            return List.of();
+        }
+        int safeDays = Math.max(1, days);
+        return jdbcTemplate.queryForList(
+                "SELECT DISTINCT ip_address FROM login_log "
+                        + "WHERE user_id = ? AND status = ? AND ip_address IS NOT NULL "
+                        + "AND ip_address <> '' AND created_at >= datetime('now', ?)",
+                String.class,
+                userId, STATUS_SUCCESS, "-" + safeDays + " days");
+    }
+
     /** 审计表总行数，供测试与运维核对。 */
     public long countAll() {
         Long count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM login_log", Long.class);

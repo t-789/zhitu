@@ -17,6 +17,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Single login flow shared by {@code /api/auth/login} and the legacy
@@ -65,19 +66,28 @@ public class AuthLoginService {
         User existing = userRepository.findByAccount(account);
         // Lockout is shared by student id / username / email of the same account.
         String attemptKey = existing == null ? account.toLowerCase(Locale.ROOT) : existing.getUsername();
-        // 日志里只写"能认人"的形态：邮箱打码成 <email>，其余清洗掉控制字符防止日志注入。
-        String auditName = AuditSanitizer.forLog(
-                existing == null && account.contains("@") ? "<email>" : attemptKey);
+        // 日志里只写"能认人"的形态：账号不存在时整串打码（可能正是被填错的密码）。
+        String auditName = existing == null
+                ? AuditSanitizer.mask(account)
+                : AuditSanitizer.forLog(attemptKey);
         String clientIp = httpRequest == null ? "unknown" : httpRequest.getRemoteAddr();
         String userAgent = httpRequest == null ? null : httpRequest.getHeader("User-Agent");
         Integer knownUserId = existing == null ? null : existing.getId();
-        // 第二层（账号总量）按配置决定是否适用；管理员默认豁免，免得外网锁死管理员。
+        // 第二层（账号总量）按配置决定是否适用；管理员只计数不上锁。
         boolean accountLevelLock = !(existing != null
                 && Integer.valueOf(2).equals(existing.getType())
                 && !securityProperties.isLoginAdminTotalLockEnabled());
+        // 该账号近期成功登录过的 IP：第二层即使锁住也不拒绝它们（Claude 复审 1）。
+        Set<String> trustedIps = existing == null
+                ? java.util.Set.of()
+                : loginLogRepository
+                        .findRecentSuccessfulIpsByUser(existing.getId(), securityProperties.getLoginTrustedIpDays())
+                        .stream()
+                        .map(LoginAttemptService::normalizeIp)
+                        .collect(java.util.stream.Collectors.toSet());
 
         LoginAttemptService.LockStatus lockStatus =
-                loginAttemptService.check(attemptKey, clientIp, accountLevelLock);
+                loginAttemptService.check(attemptKey, clientIp, accountLevelLock, trustedIps);
         if (lockStatus.locked()) {
             long retryAfter = lockStatus.retryAfterSeconds();
             LOG.warn("AUDIT event=login_locked username={} ip={} scope={} retryAfterSeconds={}",
@@ -158,8 +168,9 @@ public class AuthLoginService {
     /**
      * 审计写入；任何异常只记 warn，绝不影响登录主流程。
      *
-     * <p>{@code account} 在这里统一脱敏：像账号的值原样落库（运维要按账号查），
-     * 不像账号的值只留哈希前 8 位，避免"把密码填进账号框"变成明文审计记录。</p>
+     * <p>{@code account} 在这里统一脱敏：账号真实存在才原样落库（运维要按账号查），
+     * 不存在则只留哈希前 8 位 —— 登录框里填的可能是密码，形态判断挡不住
+     * {@code abc12345} 这种典型密码。</p>
      */
     private void audit(Integer userId,
                        String account,
@@ -167,7 +178,7 @@ public class AuthLoginService {
                        String userAgent,
                        int status,
                        String failureReason) {
-        String storedAccount = AuditSanitizer.accountForStorage(account);
+        String storedAccount = AuditSanitizer.accountForStorage(account, userId != null);
         try {
             loginLogRepository.insert(userId, storedAccount, clientIp, userAgent, status, failureReason);
         } catch (RuntimeException e) {

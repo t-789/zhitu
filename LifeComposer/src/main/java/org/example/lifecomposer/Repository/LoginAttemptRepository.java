@@ -1,8 +1,11 @@
 package org.example.lifecomposer.Repository;
 
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -90,28 +93,49 @@ public class LoginAttemptRepository {
         if (!tableExists("login_attempt") || columnExists("login_attempt", "scope")) {
             return;
         }
-        jdbcTemplate.execute("ALTER TABLE login_attempt RENAME TO login_attempt_legacy");
-        jdbcTemplate.execute("""
-                CREATE TABLE login_attempt (
-                    scope TEXT NOT NULL,
-                    attempt_key TEXT NOT NULL,
-                    failures INTEGER NOT NULL DEFAULT 0,
-                    window_start TEXT NOT NULL DEFAULT (datetime('now')),
-                    locked_until TEXT,
-                    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
-                    PRIMARY KEY (scope, attempt_key)
-                )
-                """);
-        jdbcTemplate.update("""
-                INSERT INTO login_attempt (scope, attempt_key, failures, window_start, locked_until, updated_at)
-                SELECT 'account', attempt_key, failures, datetime('now'),
-                       CASE WHEN locked_until > 0
-                            THEN strftime('%Y-%m-%d %H:%M:%S', locked_until / 1000.0, 'unixepoch')
-                            ELSE NULL END,
-                       COALESCE(updated_at, datetime('now'))
-                FROM login_attempt_legacy
-                """);
-        jdbcTemplate.execute("DROP TABLE login_attempt_legacy");
+        // 四步（改名 / 建新表 / 搬数据 / 删旧表）放在同一个连接、同一个事务里：
+        // 中途崩溃会整段回滚，不会留下 login_attempt_legacy 这张孤儿表。
+        jdbcTemplate.execute((ConnectionCallback<Void>) connection -> {
+            boolean autoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute("ALTER TABLE login_attempt RENAME TO login_attempt_legacy");
+                    statement.execute("""
+                            CREATE TABLE login_attempt (
+                                scope TEXT NOT NULL,
+                                attempt_key TEXT NOT NULL,
+                                failures INTEGER NOT NULL DEFAULT 0,
+                                window_start TEXT NOT NULL DEFAULT (datetime('now')),
+                                locked_until TEXT,
+                                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                                PRIMARY KEY (scope, attempt_key)
+                            )
+                            """);
+                }
+                try (PreparedStatement insert = connection.prepareStatement("""
+                        INSERT INTO login_attempt (scope, attempt_key, failures, window_start, locked_until, updated_at)
+                        SELECT 'account', attempt_key, failures, datetime('now'),
+                               CASE WHEN locked_until > 0
+                                    THEN strftime('%Y-%m-%d %H:%M:%S', locked_until / 1000.0, 'unixepoch')
+                                    ELSE NULL END,
+                               COALESCE(updated_at, datetime('now'))
+                        FROM login_attempt_legacy
+                        """)) {
+                    insert.executeUpdate();
+                }
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute("DROP TABLE login_attempt_legacy");
+                }
+                connection.commit();
+            } catch (RuntimeException | java.sql.SQLException e) {
+                connection.rollback();
+                throw new IllegalStateException("login_attempt 旧表迁移失败", e);
+            } finally {
+                connection.setAutoCommit(autoCommit);
+            }
+            return null;
+        });
     }
 
     public Optional<Attempt> find(String scope, String attemptKey) {
@@ -127,20 +151,24 @@ public class LoginAttemptRepository {
     }
 
     /**
-     * 连续失败计数（第一层用）：不设窗口，锁定到期或登录成功才清零。
+     * 连续失败计数（第一层用）：带"无新失败就清零"的窗口，避免几周里零星错几次就锁。
      *
+     * @param windowMinutes 窗口长度（分钟）；≤0 表示不设窗口
      * @return 自增后的累计次数
      */
-    public int incrementConsecutive(String scope, String attemptKey) {
-        Integer failures = jdbcTemplate.queryForObject("""
-                INSERT INTO login_attempt (scope, attempt_key, failures, window_start, locked_until, updated_at)
-                VALUES (?, ?, 1, datetime('now'), NULL, datetime('now'))
-                ON CONFLICT(scope, attempt_key) DO UPDATE SET
-                    failures = failures + 1,
-                    updated_at = datetime('now')
-                RETURNING failures
-                """, Integer.class, scope, attemptKey);
-        return failures == null ? 1 : failures;
+    public int incrementConsecutive(String scope, String attemptKey, int windowMinutes) {
+        if (windowMinutes <= 0) {
+            Integer failures = jdbcTemplate.queryForObject("""
+                    INSERT INTO login_attempt (scope, attempt_key, failures, window_start, locked_until, updated_at)
+                    VALUES (?, ?, 1, datetime('now'), NULL, datetime('now'))
+                    ON CONFLICT(scope, attempt_key) DO UPDATE SET
+                        failures = failures + 1,
+                        updated_at = datetime('now')
+                    RETURNING failures
+                    """, Integer.class, scope, attemptKey);
+            return failures == null ? 1 : failures;
+        }
+        return incrementWithinWindow(scope, attemptKey, windowMinutes);
     }
 
     /**
