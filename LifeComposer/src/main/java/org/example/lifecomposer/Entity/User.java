@@ -10,6 +10,8 @@ import java.sql.Timestamp;
 public class User {
     private Integer id;
     private String username;
+    /** Campus student id; the login account for self-registered users (nullable for legacy/admin rows). */
+    private String studentId;
     private String email;
     private String realName;
     private String passwordHash;

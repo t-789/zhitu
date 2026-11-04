@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
+import org.springframework.security.web.savedrequest.NullRequestCache;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
@@ -49,6 +50,7 @@ public class WebSecurityConfig {
                 // answered with 401 instead of reaching a controller.
                 .addFilterBefore(new SessionCredentialGuardFilter(userRepository),
                         AuthorizationFilter.class)
+                .requestCache(cache -> cache.requestCache(new NullRequestCache()))
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
@@ -56,6 +58,8 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/csrf",
+                                // Account-center contract: controller answers 401 in the envelope itself.
+                                "/api/auth/**",
                                 "/api/users/register",
                                 "/api/users/login",
                                 "/api/feedback/submit",

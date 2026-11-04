@@ -2,7 +2,9 @@ package org.example.lifecomposer.Service;
 
 import org.example.lifecomposer.Entity.UserProfile;
 import org.example.lifecomposer.Exception.ProfileApiException;
+import org.example.lifecomposer.Entity.User;
 import org.example.lifecomposer.Repository.UserProfileRepository;
+import org.example.lifecomposer.Repository.UserRepository;
 import org.example.lifecomposer.dto.UserProfileDto;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +16,13 @@ public class UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final ProfileFieldValidator fieldValidator;
     private final CapabilityStateService capabilityStateService;
+    private final UserRepository userRepository;
 
     public UserProfileService(UserProfileRepository userProfileRepository,
                               ProfileFieldValidator fieldValidator,
-                              CapabilityStateService capabilityStateService) {
+                              CapabilityStateService capabilityStateService,
+                              UserRepository userRepository) {
+        this.userRepository = userRepository;
         this.userProfileRepository = userProfileRepository;
         this.fieldValidator = fieldValidator;
         this.capabilityStateService = capabilityStateService;
@@ -29,6 +34,19 @@ public class UserProfileService {
             return null;
         }
         return toDto(profile);
+    }
+
+    /**
+     * v0.1.3: {@code users.student_id} is the authority. When the account has one, the
+     * profile column is only a server-side snapshot and any client-supplied value is ignored.
+     * Legacy accounts without a student id keep the old editable behaviour.
+     */
+    private String authoritativeStudentId(Long userId, String fallback) {
+        User account = userId == null ? null : userRepository.findById(userId.intValue());
+        if (account != null && account.getStudentId() != null && !account.getStudentId().isBlank()) {
+            return account.getStudentId();
+        }
+        return fallback;
     }
 
     public UserProfileDto saveOrUpdate(Long userId, UserProfileDto dto) {
@@ -78,7 +96,8 @@ public class UserProfileService {
         profile.setCollege(fieldValidator.validateAndNormalize("college", dto.getCollege(), rejectDuplicates));
         profile.setMajor(fieldValidator.validateAndNormalize("major", dto.getMajor(), rejectDuplicates));
         profile.setGrade(fieldValidator.validateAndNormalize("grade", dto.getGrade(), rejectDuplicates));
-        profile.setStudentId(fieldValidator.validateAndNormalize("studentId", dto.getStudentId(), rejectDuplicates));
+        profile.setStudentId(authoritativeStudentId(userId,
+                fieldValidator.validateAndNormalize("studentId", dto.getStudentId(), rejectDuplicates)));
         profile.setSkillsJson(fieldValidator.validateAndNormalize("skillsJson", dto.getSkillsJson(), rejectDuplicates));
         profile.setInterestsJson(fieldValidator.validateAndNormalize("interestsJson", dto.getInterestsJson(), rejectDuplicates));
         profile.setExperiencesJson(fieldValidator.validateAndNormalize("experiencesJson", dto.getExperiencesJson(), rejectDuplicates));
@@ -96,7 +115,7 @@ public class UserProfileService {
         dto.setCollege(profile.getCollege());
         dto.setMajor(profile.getMajor());
         dto.setGrade(profile.getGrade());
-        dto.setStudentId(profile.getStudentId());
+        dto.setStudentId(authoritativeStudentId(profile.getUserId(), profile.getStudentId()));
         dto.setSkillsJson(profile.getSkillsJson());
         dto.setInterestsJson(profile.getInterestsJson());
         dto.setExperiencesJson(profile.getExperiencesJson());

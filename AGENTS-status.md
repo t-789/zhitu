@@ -2,7 +2,7 @@
 
 ## 当前完成范围
 
-基础后端、成长数据底座、Agent tool-use、RAG、SSE、推荐和运维控制台已经搭建。自动化测试基线为 402 个通过（v0.1.2）；具体当前数量以最近一次测试结果为准。
+基础后端、成长数据底座、Agent tool-use、RAG、SSE、推荐和运维控制台已经搭建。自动化测试基线为 413 个通过（v0.1.3）；具体当前数量以最近一次测试结果为准。
 
 已具备的核心业务：
 
@@ -55,5 +55,6 @@
 | v0.0.7 | 2026-09-20 | HTTP 状态码常量、异常归属、Bot 防护、客户端断开处理、导入 DTO/错误契约和异常矩阵；336 测试全绿 |
 | v0.1 | 2026-09-23 | 正式画像、候选确认、Prompt 目录、能力归一、推荐/路径、反馈工具、`chat_test` 调试工作台及审核整改 |
 | v0.1.2 | 2026-11-03 | P0 整改：`max_tokens` 统一 2048、`contextLoads` 隔离测试库、LLM 只发最近 15 条用户/回答消息（`chat-context-messages`）、单用户单请求 409 `CHAT_IN_PROGRESS`、有界流式线程池 503 `CHAT_SERVER_BUSY`；402 测试全绿 |
+| v0.1.3 | 2026-11-04 | 与登录端（王钰博 zhitu-auth）磨合：`/api/auth/*` 账号中心契约（信封响应、学号/用户名/邮箱登录、1001 防枚举）、`users.student_id` 为身份权威、共享 `AuthLoginService`、`NullRequestCache`；`get_user_profile` 补 `preferences`；时间戳统一为 UTC 文本并迁移旧数据；单进程同端口，不接共享会话库；413 测试全绿 |
 
 版本详细发布说明见 [`LifeComposer/external/templates/release_notes.html`](./LifeComposer/external/templates/release_notes.html)。

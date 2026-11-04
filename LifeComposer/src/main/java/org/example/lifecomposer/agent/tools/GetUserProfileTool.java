@@ -62,6 +62,7 @@ public class GetUserProfileTool implements AgentTool {
         data.put("skills", parseJson(profile.getSkillsJson()));
         data.put("interests", parseJson(profile.getInterestsJson()));
         data.put("experiences", parseJson(profile.getExperiencesJson()));
+        data.put("preferences", parseJson(profile.getPreferencesJson()));
         data.put("goals", parseJson(profile.getGoals()));
         return ToolResult.ok(data);
     }

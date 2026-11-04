@@ -688,13 +688,14 @@
             loginBtn.textContent = '登录中...';
 
             try {
-                const res = await fetch('/api/users/login', {
+                const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ username: accountEl.value.trim(), password: pwdEl.value })
+                    body: JSON.stringify({ account: accountEl.value.trim(), password: pwdEl.value })
                 });
-                const data = await res.json().catch(() => ({}));
+                const envelope = await res.json().catch(() => ({}));
+                const data = envelope.data || {};
                 if (res.ok) {
                     if (data.passwordChangeRequired) {
                         window.location.assign('/front/change-password');
@@ -704,7 +705,7 @@
                     successToast.style.display = 'block';
                     window.location.assign(data.type === 2 ? '/admin' : '/front/profile');
                 } else {
-                    loginErr.textContent = data.message || '登录失败，请重试';
+                    loginErr.textContent = envelope.message || '登录失败，请重试';
                     loginErr.style.display = 'block';
                     successToast.style.display = 'none';
                 }
@@ -806,15 +807,16 @@
             regBtn.textContent = '注册中...';
 
             try {
-                const res = await fetch('/api/users/register', {
+                const res = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
-                        username: studentIdEl.value.trim(),
+                        studentId: studentIdEl.value.trim(),
                         realName: realNameEl.value.trim(),
                         email: emailEl.value.trim(),
-                        password: regPwdEl.value
+                        password: regPwdEl.value,
+                        confirmPassword: confirmEl.value
                     })
                 });
                 if (res.ok) {
@@ -825,12 +827,8 @@
                     successToast.textContent = '注册成功，请登录';
                     successToast.style.display = 'block';
                 } else {
-                    const body = await res.text();
-                    let error;
-                    try { error = JSON.parse(body); } catch (ignored) { error = body; }
-                    regErr.textContent = (typeof error === 'object'
-                        ? (error.email || error.username || error.password || error.realName || error.message) : error)
-                        || '注册失败，请重试';
+                    const envelope = await res.json().catch(() => ({}));
+                    regErr.textContent = envelope.message || '注册失败，请重试';
                     regErr.style.display = 'block';
                 }
             } catch (err) {

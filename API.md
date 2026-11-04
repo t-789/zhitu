@@ -9,6 +9,20 @@
 
 ---
 
+## 账号中心 `/api/auth/*`（v0.1.3，登录安全模块契约）
+
+> 与王钰博的 zhitu-auth 契约对齐，**单进程同端口（18000）**，不使用反代和共享会话库。响应统一信封 `{"code","message","data"}`，HTTP 状态码与 `code` 同值，唯一例外：业务码 `1001` 以 HTTP 401 返回。**仅此组端点使用信封**，其余端点 v1 再统一。旧 `/api/users/register|login|logout|current` 保留为兼容别名（登录走同一 `AuthLoginService`），v1 删除。`/api/auth/**` 在过滤器链放行，由控制器自己返回 401 信封（不是 403）。
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| POST | `/api/auth/register` | 无（**需 CSRF**） | body `{studentId, realName, email, password, confirmPassword}`；学号 4–20 位字母数字（同时作为 `username`）、姓名 2–50、邮箱格式、密码 8–50 位且含字母和数字、两次一致。成功 `data.userId`；校验失败 400；学号/邮箱已存在 409；每 IP 限流 429 |
+| POST | `/api/auth/login` | 无（**需 CSRF**） | body `{account, password}`，`account` 可为学号/用户名/邮箱。成功 `data`：`userId/username/realName/studentId/email/type/status/passwordChangeRequired/tempPasswordExpiresAt`。账号不存在与密码错误统一 `code=1001`（HTTP 401）；连续失败锁定 → 423（带 `Retry-After`）；封禁/临时密码过期 → 403 |
+| POST | `/api/auth/logout` | 已登录（**需 CSRF**） | 销毁会话；无会话 401 信封 |
+| GET | `/api/auth/me` | 已登录 | 身份信息，**不含学院/专业/年级**（那些在 `/api/profiles/me`）；`status`：1 正常 / 0 封禁。未登录 401 信封 |
+| GET | `/api/auth/csrf` | 无 | `data`：`headerName`(`X-XSRF-TOKEN`)/`parameterName`/`token`，并下发 `XSRF-TOKEN` Cookie |
+
+身份权威：`users`（含新增 `student_id`）是学号/用户名/邮箱/姓名/密码/角色/状态的唯一权威；`user_profiles` 是学院/专业/年级及画像的权威。账号有 `student_id` 时，`/api/profiles/me` 的 `studentId` 以 `users.student_id` 为准、忽略客户端提交值（`user_profiles.student_id` 仅为快照，已废弃）。
+
 ## 用户管理
 
 | 方法 | 路径 | 认证 | 说明 |
@@ -317,7 +331,7 @@
 
 ## 认证与权限说明
 
-- **公开端点**：`/api/users/register`, `/api/users/login`, `/api/csrf`, `/api/feedback/submit`, `/api/feedback/system-error`, `/api/qa/health`（**其中 4 个 POST 仍需 CSRF token**）
+- **公开端点**：`/api/auth/**`（v0.1.3，登录模块，POST 仍需 CSRF）, `/api/users/register`, `/api/users/login`, `/api/csrf`, `/api/feedback/submit`, `/api/feedback/system-error`, `/api/qa/health`（**其中 4 个 POST 仍需 CSRF token**）
 - **需要 ADMIN 角色**：`/api/admin/**`（v0.0.6 管理控制台）, `/admin` 与 `/admin/**`（v0.0.6 管理页面）, `/api/users/all`, `/api/users/*/grant-admin`, `/api/users/*/revoke-admin`, `/api/users/*/ban`, `/api/users/*/unban`, `/api/users/admin/**`, `/api/feedback/all`, `/api/feedback/type/**`, `/api/feedback/*/resolve`, `POST /api/college-credit-rules`
 - **v0.0.6 变更**：`POST /api/users/admin/reset-password/{userId}` 下发带状态与有效期的临时密码且不回显，用户首次登录必须通过 `POST /api/users/password` 修改；撤销或封禁最后一个可登录管理员返回 409，保证系统始终存在可登录管理员
 - **v0.0.6 会话失效**：密码变更会递增 `users.credential_version`，服务端会立即销毁用旧密码建立的会话（401 `SESSION_EXPIRED`）；带临时密码状态的会话只能访问修改密码相关端点（401 `PASSWORD_CHANGE_REQUIRED`）

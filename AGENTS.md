@@ -20,7 +20,7 @@ LifeComposer 是大学生成长规划助手后端，当前应用位于 `LifeComp
 
 ```text
 仓库根目录/
-├── AGENTS.md                         # 项目工作指令入口
+├── AGENTS.md                         # 项目工作指令入口（CLAUDE.md 仅一行 `@AGENTS.md`）
 ├── AGENTS-architecture.md            # 架构、数据库、安全、异常、Agent
 ├── AGENTS-operations.md              # 运行、配置、测试和验证
 ├── AGENTS-status.md                  # 当前状态、里程碑和历史版本
@@ -28,6 +28,7 @@ LifeComposer 是大学生成长规划助手后端，当前应用位于 `LifeComp
 ├── API.md                            # API 端点、权限、CSRF、错误响应
 ├── API_GUIDE.md                      # API 调用示例、限额、错误码和运维查询
 ├── SCHEMA.md                         # 数据库表、字段、索引、迁移和 SQLite 说明
+├── 对接回复-v0.1.3.md                # 给登录端（王钰博）的对接结论与任务清单
 ├── PROJECT_PLAN.md                   # 项目目标和阶段规划
 ├── CONTRIBUTING.md                   # 分支、PR、文件边界和协作规则
 ├── plans/                            # 项目计划文件；当前集成计划见 Plan-v0.1.1.md

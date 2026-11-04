@@ -47,6 +47,10 @@ public class SessionCredentialGuardFilter extends OncePerRequestFilter {
             "/api/users/logout",
             "/api/users/login",
             "/api/csrf",
+            "/api/auth/me",
+            "/api/auth/logout",
+            "/api/auth/login",
+            "/api/auth/csrf",
             "/front/change-password");
 
     private static final List<String> STATIC_SUFFIXES = List.of(

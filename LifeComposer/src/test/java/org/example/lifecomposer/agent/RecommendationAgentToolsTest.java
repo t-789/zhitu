@@ -67,7 +67,18 @@ class RecommendationAgentToolsTest {
         profile.setSkillsJson("[\"Python基础\",\"算法\",\"LeetCode\"]");
         profile.setAvailableTime("8 hours/week");
         profile.setGoals("[\"参加算法竞赛\"]");
+        profile.setPreferencesJson("{\"学习方式\":\"组队\"}");
         userProfileRepository.upsert(profile);
+    }
+
+    @Test
+    @DisplayName("get_user_profile exposes preferences (F layer)")
+    void profileToolIncludesPreferences() {
+        ToolResult result = toolRegistry.execute("get_user_profile",
+                new AgentToolContext((int) USER_ID), "{}");
+        assertTrue(result.ok());
+        Map<?, ?> data = (Map<?, ?>) result.data();
+        assertEquals("组队", ((Map<?, ?>) data.get("preferences")).get("学习方式"));
     }
 
     @Test

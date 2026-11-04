@@ -123,6 +123,7 @@ public class DatabaseInitializer {
         profileChangeCandidateRepository.migrateSchema();
         userCapabilityStateRepository.createTableIfNeeded();
         recommendationFeedbackRepository.createTableIfNeeded();
+        normalizeTimestampStorage();
 
         String usageCutoff = LocalDate.now(ZoneId.of(securityProperties.getChatUsageZone()))
                 .minusDays(securityProperties.getChatUsageRetentionDays()).toString();
@@ -290,5 +291,35 @@ public class DatabaseInitializer {
             return;
         }
         adminBootstrapService.bootstrap();
+    }
+
+    /**
+     * v0.1.3: every TIMESTAMP/DATETIME column is stored as UTC text
+     * {@code yyyy-MM-dd HH:mm:ss}. Rows written by older versions as epoch milliseconds
+     * (sqlite-jdbc's default for {@code java.sql.Timestamp}) are converted in place.
+     * Idempotent: only INTEGER values are touched.
+     */
+    void normalizeTimestampStorage() {
+        List<String> tables = jdbcTemplate.queryForList(
+                "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'",
+                String.class);
+        for (String table : tables) {
+            List<String> columns = jdbcTemplate.query("PRAGMA table_info(\"" + table + "\")",
+                    (rs, rowNum) -> rs.getString("type") != null
+                            && (rs.getString("type").toUpperCase(java.util.Locale.ROOT).contains("TIMESTAMP")
+                            || rs.getString("type").toUpperCase(java.util.Locale.ROOT).contains("DATETIME"))
+                            ? rs.getString("name") : null);
+            for (String column : columns) {
+                if (column == null) {
+                    continue;
+                }
+                int updated = jdbcTemplate.update("UPDATE \"" + table + "\" SET \"" + column
+                        + "\" = datetime(\"" + column + "\" / 1000, 'unixepoch') WHERE typeof(\""
+                        + column + "\") = 'integer'");
+                if (updated > 0) {
+                    LOG.info("Normalized {} epoch timestamps in {}.{} to UTC text", updated, table, column);
+                }
+            }
+        }
     }
 }

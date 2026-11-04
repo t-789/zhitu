@@ -10,7 +10,7 @@ import org.example.lifecomposer.Entity.User;
 import org.example.lifecomposer.Entity.UserType;
 import org.example.lifecomposer.Security.SessionCredential;
 import org.example.lifecomposer.Service.AdminPasswordPolicy;
-import org.example.lifecomposer.Service.LoginAttemptService;
+import org.example.lifecomposer.Service.AuthLoginService;
 import org.example.lifecomposer.Service.RegistrationRateLimiter;
 import org.example.lifecomposer.Service.UserService;
 import org.example.lifecomposer.config.AppSecurityProperties;
@@ -39,24 +39,21 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
-    private final UserDetailsService userDetailsService;
+    private final AuthLoginService authLoginService;
     private final RegistrationRateLimiter registrationRateLimiter;
-    private final LoginAttemptService loginAttemptService;
     private final AppSecurityProperties securityProperties;
     private final AdminPasswordPolicy adminPasswordPolicy;
 
     public UserController(UserService userService,
                           UserRepository userRepository,
-                          UserDetailsService userDetailsService,
+                          AuthLoginService authLoginService,
                           RegistrationRateLimiter registrationRateLimiter,
-                          LoginAttemptService loginAttemptService,
                           AppSecurityProperties securityProperties,
                           AdminPasswordPolicy adminPasswordPolicy) {
         this.userService = userService;
         this.userRepository = userRepository;
-        this.userDetailsService = userDetailsService;
+        this.authLoginService = authLoginService;
         this.registrationRateLimiter = registrationRateLimiter;
-        this.loginAttemptService = loginAttemptService;
         this.securityProperties = securityProperties;
         this.adminPasswordPolicy = adminPasswordPolicy;
     }
@@ -84,92 +81,37 @@ public class UserController {
         return ResponseEntity.ok("注册成功");
     }
 
+    /** Legacy login; {@code /api/auth/login} is the contract endpoint. Same flow via {@link AuthLoginService}. */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpRequest) {
-        String username = request.getUsername();
-        User account = userRepository.findByUsername(username);
-        if (account == null) {
-            account = userRepository.findByEmail(username);
-        }
-        // Lockout is shared by username and email for the same account.
-        String attemptKey = account == null ? username.toLowerCase(java.util.Locale.ROOT) : account.getUsername();
-        String auditName = account == null && username.contains("@") ? "<email>" : attemptKey;
-        String clientIp = clientIp(httpRequest);
-        if (loginAttemptService.isLocked(attemptKey, clientIp)) {
-            long retryAfter = loginAttemptService.retryAfterSeconds(attemptKey, clientIp);
-            LOG.warn("AUDIT event=login_locked username={} ip={} retryAfterSeconds={}",
-                    auditName, clientIp, retryAfter);
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                    .header("Retry-After", String.valueOf(retryAfter))
-                    .body(Map.of(
-                            "error", "LOGIN_LOCKED",
-                            "message", "登录失败次数过多，请稍后再试",
-                            "retryAfterSeconds", retryAfter));
-        }
-        try {
-            User user = userService.login(request.getUsername(), request.getPassword());
-            if (user == null) {
-                loginAttemptService.recordFailure(attemptKey, clientIp);
-                LOG.warn("AUDIT event=login_failure username={} ip={}", auditName, clientIp);
+        AuthLoginService.Result result = authLoginService.login(
+                request.getUsername(), request.getPassword(), httpRequest);
+        switch (result.status()) {
+            case LOCKED:
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .header("Retry-After", String.valueOf(result.retryAfterSeconds()))
+                        .body(Map.of(
+                                "error", "LOGIN_LOCKED",
+                                "message", result.message(),
+                                "retryAfterSeconds", result.retryAfterSeconds()));
+            case BAD_CREDENTIALS:
                 return ResponseEntity.badRequest()
-                        .body(Map.of("error", "BAD_CREDENTIALS", "message", "登录失败，用户名或密码错误"));
-            }
-
-            // Review follow-up: an administrator-issued temporary password really
-            // expires — after the deadline the account cannot log in any more.
-            if (Boolean.TRUE.equals(user.getPasswordResetRequired())
-                    && userService.isTemporaryPasswordExpired(user)) {
-                loginAttemptService.recordFailure(attemptKey, clientIp);
-                LOG.warn("AUDIT event=login_rejected_temp_password_expired username={} ip={}",
-                        auditName, clientIp);
+                        .body(Map.of("error", "BAD_CREDENTIALS", "message", result.message()));
+            case TEMP_PASSWORD_EXPIRED:
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("error", "TEMP_PASSWORD_EXPIRED",
-                                "message", "临时密码已过期，请联系管理员重新下发"));
-            }
-
-            loginAttemptService.recordSuccess(attemptKey, clientIp);
-
-            UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-            Authentication authentication = new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    userDetails.getPassword(),
-                    userDetails.getAuthorities()
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // Session fixation protection: discard any pre-login session and
-            // create a fresh one after successful authentication.
-            HttpSession existingSession = httpRequest.getSession(false);
-            if (existingSession != null) {
-                existingSession.invalidate();
-            }
-            HttpSession session = httpRequest.getSession(true);
-            session.setAttribute("user", user);
-            session.setAttribute(
-                    HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
-                    SecurityContextHolder.getContext()
-            );
-            SessionCredential.bind(session, user);
-
-            boolean mustChangePassword = Boolean.TRUE.equals(user.getPasswordResetRequired());
-            if (mustChangePassword) {
-                LOG.info("AUDIT event=login_ok_password_change_required username={} ip={}",
-                        username, clientIp);
-            }
-
-            Map<String, Object> body = new LinkedHashMap<>();
-            body.put("message", "登录成功");
-            body.put("username", user.getUsername());
-            body.put("type", user.getType());
-            body.put("passwordChangeRequired", mustChangePassword);
-            body.put("tempPasswordExpiresAt", user.getTempPasswordExpiresAt());
-            return ResponseEntity.ok(body);
-        } catch (IllegalStateException e) {
-            loginAttemptService.recordFailure(attemptKey, clientIp);
-            LOG.warn("AUDIT event=login_failure username={} ip={} reason={}",
-                    auditName, clientIp, e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(Map.of("error", "LOGIN_REJECTED", "message", String.valueOf(e.getMessage())));
+                        .body(Map.of("error", "TEMP_PASSWORD_EXPIRED", "message", result.message()));
+            case REJECTED:
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "LOGIN_REJECTED", "message", result.message()));
+            default:
+                User user = result.user();
+                Map<String, Object> body = new LinkedHashMap<>();
+                body.put("message", "登录成功");
+                body.put("username", user.getUsername());
+                body.put("type", user.getType());
+                body.put("passwordChangeRequired", Boolean.TRUE.equals(user.getPasswordResetRequired()));
+                body.put("tempPasswordExpiresAt", user.getTempPasswordExpiresAt());
+                return ResponseEntity.ok(body);
         }
     }
 

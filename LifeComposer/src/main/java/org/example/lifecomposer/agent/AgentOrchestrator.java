@@ -53,6 +53,8 @@ public class AgentOrchestrator {
     private static final java.util.Set<String> RECOMMENDATION_TOOLS = java.util.Set.of(
             "list_growth_directions", "get_capability_gap", "get_recommendation_reasons", "get_path_plan");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    /** JVM default zone is UTC (storage); the display strings keep campus local time. */
+    private static final java.time.ZoneId DISPLAY_ZONE = java.time.ZoneId.of("Asia/Shanghai");
 
 
     private final ChatMessageRepository chatMessageRepository;
@@ -105,7 +107,7 @@ public class AgentOrchestrator {
             response.setContent(content);
         }
         response.setPromptVersions(usedVersions);
-        response.setCreateTime(LocalDateTime.now().format(TIME_FORMATTER));
+        response.setCreateTime(LocalDateTime.now(DISPLAY_ZONE).format(TIME_FORMATTER));
         response.setMocked(false);
         response.setError(null);
         return response;
@@ -140,7 +142,7 @@ public class AgentOrchestrator {
             response.setContent(content);
         }
         response.setPromptVersions(usedVersions);
-        response.setCreateTime(LocalDateTime.now().format(TIME_FORMATTER));
+        response.setCreateTime(LocalDateTime.now(DISPLAY_ZONE).format(TIME_FORMATTER));
         response.setMocked(false);
         response.setError(null);
         return response;
@@ -285,7 +287,7 @@ public class AgentOrchestrator {
             }
 
             String content = response.getContent() == null ? "" : response.getContent();
-            String createTime = LocalDateTime.now().format(TIME_FORMATTER);
+            String createTime = LocalDateTime.now(DISPLAY_ZONE).format(TIME_FORMATTER);
             // Persist only after the complete message was delivered to the client.
             // A failed SSE send throws and leaves no partial assistant row behind.
             listener.onAssistantMessage(content, createTime);

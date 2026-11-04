@@ -55,9 +55,22 @@ public class UserService {
     }
 
     public boolean register(String username, String rawPassword, String email, String realName) {
+        return register(username, null, rawPassword, email, realName);
+    }
+
+    /**
+     * Registers a user. {@code studentId} is the campus id used by the
+     * {@code /api/auth/register} flow (then also the username); legacy callers pass null.
+     * Student ids and usernames share one namespace so one login string maps to one account.
+     */
+    public boolean register(String username, String studentId, String rawPassword,
+                            String email, String realName) {
         String normalizedEmail = email == null || email.isBlank() ? null : email.trim().toLowerCase(Locale.ROOT);
         if (userRepository.findByUsername(username) != null
+                || userRepository.findByStudentId(username) != null
                 || userRepository.findByEmail(username) != null
+                || (studentId != null && (userRepository.findByStudentId(studentId) != null
+                || userRepository.findByUsername(studentId) != null))
                 || (normalizedEmail != null && (userRepository.findByEmail(normalizedEmail) != null
                 || userRepository.usernameExistsIgnoringCase(normalizedEmail)))) {
             return false;
@@ -65,6 +78,7 @@ public class UserService {
 
         User user = new User();
         user.setUsername(username);
+        user.setStudentId(studentId);
         user.setEmail(normalizedEmail);
         user.setRealName(realName == null || realName.isBlank() ? null : realName.trim());
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
@@ -80,10 +94,7 @@ public class UserService {
     }
 
     public User login(String username, String rawPassword) {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            user = userRepository.findByEmail(username);
-        }
+        User user = userRepository.findByAccount(username);
         if (user == null) {
             return null;
         }

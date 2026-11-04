@@ -26,6 +26,7 @@ public class UserRepository {
             User user = new User();
             user.setId(rs.getInt("id"));
             user.setUsername(rs.getString("username"));
+            user.setStudentId(rs.getString("student_id"));
             user.setEmail(rs.getString("email"));
             user.setRealName(rs.getString("real_name"));
             user.setPasswordHash(rs.getString("password_hash"));
@@ -48,6 +49,7 @@ public class UserRepository {
                 CREATE TABLE IF NOT EXISTS users (
                   id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT UNIQUE NOT NULL,
+                  student_id TEXT NULL,
                   email TEXT NULL,
                   real_name TEXT NULL,
                   password_hash TEXT NOT NULL,
@@ -74,6 +76,12 @@ public class UserRepository {
         if (!hasColumn("users", "real_name")) {
             jdbcTemplate.execute("ALTER TABLE users ADD COLUMN real_name TEXT NULL");
         }
+        // v0.1.3: student id is account identity and lives on users (not user_profiles).
+        if (!hasColumn("users", "student_id")) {
+            jdbcTemplate.execute("ALTER TABLE users ADD COLUMN student_id TEXT NULL");
+        }
+        jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_student_id "
+                + "ON users(student_id) WHERE student_id IS NOT NULL");
         jdbcTemplate.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_ci "
                 + "ON users(lower(email)) WHERE email IS NOT NULL");
         // Remove legacy column from old project structure.
@@ -146,12 +154,13 @@ public class UserRepository {
 
     public int insertUser(User user) {
         String sql = """
-                INSERT INTO users(username, email, real_name, password_hash, type, is_banned, ban_end_time, avatar, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users(username, student_id, email, real_name, password_hash, type, is_banned, ban_end_time, avatar, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         Timestamp now = new Timestamp(System.currentTimeMillis());
         return jdbcTemplate.update(sql,
                 user.getUsername(),
+                user.getStudentId(),
                 user.getEmail(),
                 user.getRealName(),
                 user.getPasswordHash(),
@@ -182,6 +191,33 @@ public class UserRepository {
         } catch (EmptyResultDataAccessException e) {
             return null;
         }
+    }
+
+    public User findByStudentId(String studentId) {
+        if (studentId == null) {
+            return null;
+        }
+        try {
+            return jdbcTemplate.queryForObject("SELECT * FROM users WHERE student_id = ?",
+                    USER_ROW_MAPPER, studentId);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    /** Login lookup: student id, then username, then email. */
+    public User findByAccount(String account) {
+        if (account == null) {
+            return null;
+        }
+        User user = findByStudentId(account);
+        if (user == null) {
+            user = findByUsername(account);
+        }
+        if (user == null) {
+            user = findByEmail(account);
+        }
+        return user;
     }
 
     public boolean usernameExistsIgnoringCase(String username) {

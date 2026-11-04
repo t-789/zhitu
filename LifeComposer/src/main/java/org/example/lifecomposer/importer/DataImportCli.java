@@ -32,6 +32,7 @@ public final class DataImportCli {
             System.exit(0);
         }
 
+        LifeComposerApplication.useUtcStorageZone();
         SpringApplication application = new SpringApplication(LifeComposerApplication.class);
         application.setWebApplicationType(WebApplicationType.NONE);
         application.setDefaultProperties(Map.of("lifecomposer.import.mode", "true"));

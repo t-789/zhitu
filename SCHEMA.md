@@ -57,6 +57,7 @@ capability_tags
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT UNIQUE NOT NULL,
+  student_id TEXT NULL,                          -- v0.1.3：学号，账号身份权威；旧账号/管理员允许 NULL
   email TEXT NULL,                               -- v0.1.1：旧用户允许 NULL，大小写不敏感唯一
   real_name TEXT NULL,                           -- v0.1.1：新注册页填写的姓名
   password_hash TEXT NOT NULL,
@@ -72,6 +73,7 @@ CREATE TABLE IF NOT EXISTS users (
   credential_version INTEGER NOT NULL DEFAULT 1         -- v0.0.6：会话失效用的密码代号
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_ci ON users(lower(email)) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_student_id ON users(student_id) WHERE student_id IS NOT NULL;
 ```
 
 **字段说明：**
@@ -80,6 +82,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_ci ON users(lower(email)) WHER
 |------|------|------|------|
 | `id` | 自动 | 主键 | 1 |
 | `username` | 是 | 用户名，唯一 | 'alice' |
+| `student_id` | 否 | v0.1.3：学号，唯一；`/api/auth/register` 写入且 `username=student_id`。登录可用学号/用户名/邮箱，三者共用一个命名空间（注册时互相查重） | '20260001' |
 | `email` | 否 | 注册邮箱，存储时归一为小写；非空值大小写不敏感唯一。旧用户为 NULL，未做邮箱验证 | 'alice@example.edu' |
 | `real_name` | 否 | 注册页姓名；旧用户为 NULL | '张三' |
 | `password_hash` | 是 | BCrypt 哈希密码 | `$2a$10$...` |
@@ -692,6 +695,13 @@ Milestone 7 管理控制台带来按用户/状态/类型/日期的分页筛选�
 
 > 迁移：`UserRepository.migrateUserSchema()` 用 `PRAGMA table_info` 逐列检测并 `ALTER TABLE ADD COLUMN` 幂等补齐，`UserSchemaMigrationTest` 用真实旧版建表语句验证升级路径与默认值。
 > `spring.datasource.url` 增加 `transaction_mode=immediate`，使 `@Transactional` 写事务（管理员保护、密码变更）在事务开始即取得 SQLite 写锁，避免“先查数量再更新”的并发窗口。
+
+### v0.1.3：账号与时间约定
+
+- **`users` 只存账号基础数据**（身份 + 凭据 + 状态）。学院/专业/年级只在 `user_profiles`。`user_profiles.student_id` 保留列但**废弃**：账号有 `student_id` 时服务端写入的是 `users.student_id` 的快照，客户端值被忽略。
+- **时间戳统一为 UTC 文本 `yyyy-MM-dd HH:mm:ss`**（与 `datetime('now')`、`CURRENT_TIMESTAMP` 一致）：数据源 URL 增加 `date_class=TEXT&date_string_format=yyyy-MM-dd HH:mm:ss`，应用启动时把 JVM 默认时区固定为 UTC（`LifeComposerApplication.useUtcStorageZone()`，导入 CLI 同样调用；测试通过 surefire `-Duser.timezone=UTC`）。sqlite-jdbc 按 JVM 默认时区格式化/解析文本，所以不固定时区会让 `CURRENT_TIMESTAMP` 行偏移 8 小时。需要业务时区的地方（聊天额度、展示时间）显式传 `Asia/Shanghai`。
+- **迁移**：`DatabaseInitializer.normalizeTimestampStorage()` 启动时扫描所有声明为 `TIMESTAMP`/`DATETIME` 的列，把旧版 epoch 毫秒（`typeof = 'integer'`）就地转为 UTC 文本，幂等；`TimestampStorageMigrationTest` 覆盖。
+- **已知例外**：`profile_change_candidates.expires_at` 等由 `ProfileChangeService` 用 `app clock`（Asia/Shanghai）写入的短期文本不在此约定内（候选带 TTL，不参与增量同步）。
 
 ## 附录：SQLite 兼容性说明
 

@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.example</groupId>
     <artifactId>LifeComposer</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.3</version>
     <name>LifeComposer</name>
     <description>LifeComposer</description>
     <url/>
@@ -182,7 +182,7 @@
                 <configuration>
                     <!-- Java 25+ blocks dynamic agent loading by default; Mockito's
                          inline-mock-maker needs Byte Buddy self-attach during tests -->
-                    <argLine>-XX:+EnableDynamicAgentLoading -Djdk.attach.allowAttachSelf=true</argLine>
+                    <argLine>-Duser.timezone=UTC -XX:+EnableDynamicAgentLoading -Djdk.attach.allowAttachSelf=true</argLine>
                 </configuration>
             </plugin>
         </plugins>
