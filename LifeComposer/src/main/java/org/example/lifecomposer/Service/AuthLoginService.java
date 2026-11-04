@@ -65,8 +65,8 @@ public class AuthLoginService {
         String userAgent = httpRequest == null ? null : httpRequest.getHeader("User-Agent");
         Integer knownUserId = existing == null ? null : existing.getId();
 
-        if (loginAttemptService.isLocked(attemptKey, clientIp)) {
-            long retryAfter = loginAttemptService.retryAfterSeconds(attemptKey, clientIp);
+        if (loginAttemptService.isLocked(attemptKey)) {
+            long retryAfter = loginAttemptService.retryAfterSeconds(attemptKey);
             LOG.warn("AUDIT event=login_locked username={} ip={} retryAfterSeconds={}",
                     auditName, clientIp, retryAfter);
             audit(knownUserId, account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,
@@ -76,7 +76,7 @@ public class AuthLoginService {
         try {
             User user = userService.login(account, password);
             if (user == null) {
-                int failures = loginAttemptService.recordFailure(attemptKey, clientIp);
+                int failures = loginAttemptService.recordFailure(attemptKey);
                 LOG.warn("AUDIT event=login_failure username={} ip={}", auditName, clientIp);
                 String reason;
                 if (existing == null) {
@@ -91,7 +91,7 @@ public class AuthLoginService {
             }
             if (Boolean.TRUE.equals(user.getPasswordResetRequired())
                     && userService.isTemporaryPasswordExpired(user)) {
-                loginAttemptService.recordFailure(attemptKey, clientIp);
+                loginAttemptService.recordFailure(attemptKey);
                 LOG.warn("AUDIT event=login_rejected_temp_password_expired username={} ip={}",
                         auditName, clientIp);
                 audit(user.getId(), account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,
@@ -99,7 +99,7 @@ public class AuthLoginService {
                 return Result.of(Status.TEMP_PASSWORD_EXPIRED, "临时密码已过期，请联系管理员重新下发");
             }
 
-            loginAttemptService.recordSuccess(attemptKey, clientIp);
+            loginAttemptService.recordSuccess(attemptKey);
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
             Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -125,7 +125,7 @@ public class AuthLoginService {
             }
             return new Result(Status.OK, user, 0, "登录成功");
         } catch (IllegalStateException e) {
-            loginAttemptService.recordFailure(attemptKey, clientIp);
+            loginAttemptService.recordFailure(attemptKey);
             LOG.warn("AUDIT event=login_failure username={} ip={} reason={}",
                     auditName, clientIp, e.getMessage());
             audit(knownUserId, account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,

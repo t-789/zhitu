@@ -8,8 +8,9 @@ import java.util.Optional;
 /**
  * Persistence for {@code login_attempt}：连续失败次数与锁定截止时间。
  * <p>
- * 记录按"账号 + IP"成对存储（key = username + '|' + clientIp），与 v0.1.3 的
- * 内存实现语义一致；区别只是落库，进程重启后锁定状态仍然有效。
+ * v0.1.4 起落库（进程重启后锁定仍然有效）；v0.1.5 起 key 只按账号
+ * （{@code attempt_key} 存规范化后的账号名），不再拼 IP —— 换 IP 绕不过锁定。
+ * 升级前写下的 {@code "账号|IP"} 旧记录不会再被匹配到，等同自然过期。
  */
 @Repository
 public class LoginAttemptRepository {
