@@ -23,4 +23,11 @@ public class RagConfig {
 
     /** Minimum cosine similarity (0..1, cosine mapped from [-1,1]). */
     private double minSimilarity = 0.2;
+
+    /**
+     * Safety net for the in-memory vector index. The index is rebuilt as soon as the
+     * set of embeddings changes (checked with one cheap query per search); this caps
+     * how long a change the check could miss would stay invisible. 0 or less disables it.
+     */
+    private int indexMaxAgeSeconds = 300;
 }
