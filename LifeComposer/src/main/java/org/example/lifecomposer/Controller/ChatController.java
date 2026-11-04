@@ -73,15 +73,22 @@ public class ChatController {
         if (!concurrencyGuard.tryAcquire(userId)) {
             return inProgressResponse();
         }
+        ChatQuotaDecision admitted = null;
         try {
             ChatQuotaDecision quota = chatQuotaService.tryConsume(userId);
             if (!quota.allowed()) {
                 return quotaResponse(quota);
             }
+            admitted = quota;
             ChatResponse response = chatService.sendMessage(
                     userId, request.getMessage(), effectiveMaxTokens(request.getMaxTokens()));
             return ResponseEntity.ok(response);
         } catch (LlmUnavailableException e) {
+            // /send delivers nothing before the final answer, so a failure here
+            // never leaves the user with partial output.
+            if (e.isRefundable() && admitted != null) {
+                chatQuotaService.refundDailyOnly(userId, admitted);
+            }
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                     "error", e.getCode(),
                     "message", "LLM 不可用，请稍后重试"));
@@ -117,12 +124,12 @@ public class ChatController {
         int maxTokens = effectiveMaxTokens(request.getMaxTokens());
         SseEmitter emitter = new SseEmitter(securityProperties.getSseTimeoutMillis());
         try {
-            chatStreamExecutor.execute(() -> runStream(userId, request, maxTokens, emitter));
+            chatStreamExecutor.execute(() -> runStream(userId, request, maxTokens, emitter, quota));
         } catch (RejectedExecutionException e) {
             // v0.1.2: bounded executor is full. The request never reached the
             // model, so give back the quota as well as the slot.
             concurrencyGuard.release(userId);
-            chatQuotaService.refund(userId);
+            chatQuotaService.refund(userId, quota);
             LOG.warn("Chat stream rejected for user {}: executor saturated", userId);
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                     "error", "CHAT_SERVER_BUSY",
@@ -133,7 +140,8 @@ public class ChatController {
                 .body(emitter);
     }
 
-    private void runStream(Integer userId, ChatRequest request, int maxTokens, SseEmitter emitter) {
+    private void runStream(Integer userId, ChatRequest request, int maxTokens, SseEmitter emitter,
+                           ChatQuotaDecision admitted) {
         // The slot is released once, before the terminal event is sent, so a
         // client that starts its next turn as soon as it sees "done"/"error" is
         // never refused with CHAT_IN_PROGRESS. The flag stops a second release
@@ -156,6 +164,13 @@ public class ChatController {
                 releaseSlot.run();
                 emitter.completeWithError(e);
             } catch (LlmUnavailableException e) {
+                // The failure is on our side: give the daily quota back before the terminal
+                // event, but only if the user received nothing from the model. Once any
+                // thinking/token/tool_call/answer event went out, the request was served
+                // (and billed) and stays counted, so a failure cannot be used to get free output.
+                if (e.isRefundable() && !listener.modelOutputSent()) {
+                    chatQuotaService.refundDailyOnly(userId, admitted);
+                }
                 releaseSlot.run();
                 completeWithErrorEvent(emitter, e.getCode(), "LLM 不可用，请稍后重试");
             } catch (Exception e) {
@@ -250,9 +265,15 @@ public class ChatController {
     private final class SseAgentEventListener implements AgentEventListener {
 
         private final SseEmitter emitter;
+        /** Set before the first event that carries model output is written. */
+        private volatile boolean modelOutputSent;
 
         private SseAgentEventListener(SseEmitter emitter) {
             this.emitter = emitter;
+        }
+
+        boolean modelOutputSent() {
+            return modelOutputSent;
         }
 
         @Override
@@ -262,6 +283,7 @@ public class ChatController {
 
         @Override
         public void onThinkingStart(Instant startedAt) {
+            modelOutputSent = true;
             send(emitter, "thinking_start", Map.of("startedAt", startedAt.toString()));
         }
 
@@ -277,6 +299,7 @@ public class ChatController {
 
         @Override
         public void onToolCall(String callId, String name, String description, String argumentsJson) {
+            modelOutputSent = true;
             send(emitter, "tool_call", Map.of(
                     "callId", callId,
                     "name", name,
@@ -295,11 +318,13 @@ public class ChatController {
 
         @Override
         public void onToken(String delta) {
+            modelOutputSent = true;
             send(emitter, "token", Map.of("delta", delta));
         }
 
         @Override
         public void onAssistantMessage(String content, String createTime) {
+            modelOutputSent = true;
             send(emitter, "assistant_message", Map.of(
                     "content", content,
                     "createTime", createTime));

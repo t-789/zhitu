@@ -1,6 +1,10 @@
 package org.example.lifecomposer.controller;
 
 import org.example.lifecomposer.Service.ChatConcurrencyGuard;
+import org.example.lifecomposer.Service.LlmClientFactory;
+import org.example.lifecomposer.support.StubChatLlm;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.example.lifecomposer.Service.ProfileChangeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -38,6 +43,14 @@ class ChatConcurrencyControllerTest extends BaseControllerTest {
 
     @Autowired
     private ProfileChangeService profileChangeService;
+
+    @MockitoBean
+    private LlmClientFactory llmClientFactory;
+
+    @BeforeEach
+    void healthyLlm() {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.replying("ok"));
+    }
 
     private int userId(String username) {
         return jdbcTemplate.queryForObject("SELECT id FROM users WHERE username = ?", Integer.class, username);
@@ -76,10 +89,9 @@ class ChatConcurrencyControllerTest extends BaseControllerTest {
             guard.release(id);
         }
 
-        // Slot free again: the request proceeds (LLM is disabled in tests -> 503)
-        // and the slot is released afterwards.
-        chat(session, "/api/chat/send").andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.error").value("LLM_UNAVAILABLE"));
+        // Slot free again: the request proceeds, is served and charged, and the
+        // slot is released afterwards.
+        chat(session, "/api/chat/send").andExpect(status().isOk());
         assertEquals(1, usageCount(id));
         assertFalse(guard.isActive(id));
     }

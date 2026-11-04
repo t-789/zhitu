@@ -57,6 +57,15 @@ public class LlmConfig {
 
         private int timeoutMillis = 30000;
 
+        /**
+         * Extra attempts after a connection failure or HTTP 429/5xx, made only
+         * before any response body has been consumed. 0 disables retrying.
+         */
+        private int maxRetries = 2;
+
+        /** First backoff delay; doubles on every further attempt (capped at 5 s). */
+        private int retryBaseDelayMillis = 500;
+
         /** Sampling temperature, or null to let the provider decide. */
         private Double temperature = null;
 
