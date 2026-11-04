@@ -180,6 +180,14 @@ Base URL: http://localhost:18000
 
 > 这是部署配置，不在代码里硬编码。切换后请重启并确认 `login_log.ip_address` 记录的是真实客户端地址。
 
+**上线安全开关清单**（漏一项就等于没做）：
+
+| 配置 | 生产值 | 漏配的后果 |
+|------|--------|-----------|
+| `app.security.admin-intranet-only` | `true` | 管理员账号暴露在外网，只受第一层锁定，换 IP 即可慢慢猜密码；管理员超阈值只告警不上锁，等于没有兜底 |
+| `server.forward-headers-strategy` | `framework` + 只有代理能连应用端口 | 上面整节失效：限流按代理分桶、IP 维度锁定失去意义 |
+| `app.security.login-trusted-ip-days` | 保持 `30`（按需调整） | 调成 0 等于取消"可信 IP 豁免"，攻击者用两个 IP 就能把受害者锁在门外 |
+
 ---
 
 ## 3. 快速上手（完整 curl 流程）

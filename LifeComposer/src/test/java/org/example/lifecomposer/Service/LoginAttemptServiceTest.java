@@ -115,8 +115,8 @@ class LoginAttemptServiceTest {
     }
 
     @Test
-    @DisplayName("管理员豁免第二层：跨 IP 打满也不会被账号总量锁死")
-    void adminAccountIgnoresAccountLevelLock() {
+    @DisplayName("管理员：第二层照常计数，但不上锁（避免被外网锁死，也不泄露身份）")
+    void adminAccountCountsButIsNeverLockedByTotalLayer() {
         LoginAttemptService service = newService(defaults());
 
         for (int i = 0; i < 40; i++) {
@@ -125,14 +125,67 @@ class LoginAttemptServiceTest {
             assertFalse(outcome.locked(), "管理员不该被总量锁");
         }
         assertFalse(service.check("admin", "10.0.9.99", false).locked());
-        assertEquals(0, repository.countByScope(LoginAttemptRepository.SCOPE_ACCOUNT),
-                "管理员不写第二层计数");
+        assertEquals(1, repository.countByScope(LoginAttemptRepository.SCOPE_ACCOUNT),
+                "管理员仍写入第二层计数，只是不触发锁定");
 
         // 但第一层仍然生效：同一 IP 连错 5 次照样锁。
         for (int i = 0; i < 5; i++) {
             service.recordFailure("admin", IP_A, false);
         }
         assertTrue(service.check("admin", IP_A, false).locked());
+    }
+
+    @Test
+    @DisplayName("可信 IP：第二层锁住后不拒绝该账号常用网络（Claude 复审 1）")
+    void trustedIpBypassesAccountLevelLock() {
+        LoginAttemptService service = newService(defaults());
+        for (int i = 0; i < 30; i++) {
+            service.recordFailure("alice", "10.0.7." + i, true);
+        }
+        assertTrue(service.check("alice", "10.0.7.199", true).locked(), "陌生 IP 被第二层挡住");
+        assertFalse(service.check("alice", IP_A, true, java.util.Set.of(IP_A)).locked(),
+                "受害者从常用 IP 登录不该被挡");
+    }
+
+    @Test
+    @DisplayName("IPv6 归一到 /64：同一网段换地址不算换 key")
+    void ipv6IsNormalizedToSlash64() {
+        assertEquals(LoginAttemptService.normalizeIp("2001:db8:1:2:aaaa:bbbb:cccc:dddd"),
+                LoginAttemptService.normalizeIp("2001:db8:1:2:1111:2222:3333:4444"));
+        assertTrue(LoginAttemptService.normalizeIp("2001:db8:1:2::1").endsWith("::/64"));
+        assertEquals(IP_A, LoginAttemptService.normalizeIp(IP_A), "IPv4 保持原样");
+
+        AppSecurityProperties properties = defaults();
+        properties.setLoginMaxFailures(2);
+        LoginAttemptService service = newService(properties);
+        service.recordFailure("alice", "2001:db8:1:2::1", true);
+        service.recordFailure("alice", "2001:db8:1:2::2", true);
+        assertTrue(service.check("alice", "2001:db8:1:2::3", true).locked(),
+                "同一 /64 内的地址共用一份计数");
+    }
+
+    @Test
+    @DisplayName("第一层计数带窗口：窗口内没有新失败就从 1 重来（Claude 复审 4）")
+    void pairWindowResetsAfterQuietPeriod() {
+        AppSecurityProperties properties = defaults();
+        properties.setLoginMaxFailures(5);
+        properties.setLoginPairWindowMinutes(60);
+        LoginAttemptService service = newService(properties);
+
+        for (int i = 0; i < 4; i++) {
+            service.recordFailure("alice", IP_A, true);
+        }
+        assertEquals(4, repository.find(LoginAttemptRepository.SCOPE_PAIR, "alice|" + IP_A)
+                .orElseThrow().failures());
+
+        // 把这四次的窗口起点挪到两小时前：等同"很久没再错"。
+        jdbcTemplate.update("UPDATE login_attempt SET window_start = datetime('now', '-2 hours') "
+                + "WHERE scope = 'pair' AND attempt_key = ?", "alice|" + IP_A);
+
+        LoginAttemptService.FailureOutcome outcome = service.recordFailure("alice", IP_A, true);
+        assertEquals(1, repository.find(LoginAttemptRepository.SCOPE_PAIR, "alice|" + IP_A)
+                .orElseThrow().failures(), "窗口过期后第一层从 1 重新计数");
+        assertFalse(outcome.locked(), "第 5 次不该锁，因为前面的已经过期");
     }
 
     @Test
@@ -182,7 +235,9 @@ class LoginAttemptServiceTest {
 
         service.recordFailure("  Alice  ", IP_A, false);
         assertTrue(service.check("alice", IP_A, false).locked());
-        assertEquals(1, repository.countAll());
+        assertEquals(1, repository.countByScope(LoginAttemptRepository.SCOPE_PAIR));
+        assertEquals(1, repository.countByScope(LoginAttemptRepository.SCOPE_ACCOUNT),
+                "第一层与第二层各一条，键都归一成 alice");
     }
 
     @Test
@@ -213,10 +268,12 @@ class LoginAttemptServiceTest {
         assertTrue(service.check("alice", IP_A, false).locked(), "刚失败时是锁的");
         Thread.sleep(1_200);
         assertFalse(service.check("alice", IP_A, false).locked(), "过期后应解锁");
-        assertEquals(0, repository.countAll(), "过期记录应被清除");
+        assertEquals(0, repository.countByScope(LoginAttemptRepository.SCOPE_PAIR),
+                "过期记录应被清除，下一次失败从 1 开始");
 
         service.recordFailure("alice", IP_A, false);
-        assertEquals(1, repository.countAll());
+        assertEquals(1, repository.find(LoginAttemptRepository.SCOPE_PAIR, "alice|" + IP_A)
+                .orElseThrow().failures(), "过期后的第一次失败重新从 1 开始");
     }
 
     @Test
@@ -230,7 +287,7 @@ class LoginAttemptServiceTest {
         LoginAttemptService.FailureOutcome outcome = service.recordFailure("alice", IP_A, false);
         assertFalse(outcome.locked());
         assertFalse(service.check("alice", IP_A, false).locked());
-        assertEquals(1, repository.countAll());
+        assertEquals(1, repository.countByScope(LoginAttemptRepository.SCOPE_PAIR));
     }
 
     @Test

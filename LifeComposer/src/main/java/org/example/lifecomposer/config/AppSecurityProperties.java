@@ -85,6 +85,18 @@ public class AppSecurityProperties {
     /** 登录相关清理任务的 cron（默认每小时整点）。 */
     private String loginCleanupCron = "0 0 * * * *";
 
+    /**
+     * 第一层的失败计数窗口：这么多分钟内没有新失败就从 1 重新开始，
+     * 避免"几周里零星错 4 次、第 5 次就被锁"。0 表示不设窗口。
+     */
+    private int loginPairWindowMinutes = 60;
+
+    /**
+     * "可信 IP"的回看天数：该账号在这些天内成功登录过的 IP，第二层（账号总量）
+     * 不拒绝它的登录 —— 攻击者换 IP 锁账号，锁不到受害者自己常用的网络。
+     */
+    private int loginTrustedIpDays = 30;
+
     /** When true, admin endpoints only accept private/loopback client addresses. */
     private boolean adminIntranetOnly = false;
 

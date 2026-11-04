@@ -3,7 +3,6 @@ package org.example.lifecomposer.Security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.regex.Pattern;
 
 /**
  * 审计与日志里跟"用户输入"打交道时的两个处理：<b>清洗</b>和<b>脱敏</b>。
@@ -11,18 +10,25 @@ import java.util.regex.Pattern;
  * <p>为什么需要：</p>
  * <ul>
  *   <li><b>清洗</b>——落日志前把 CR / LF / NUL 等控制字符换成空格。原始输入里带
- *       {@code \r\n} 就能在日志里伪造一整行（例如伪造一条 {@code AUDIT event=login_ok}），
+ *       {@code \\r\\n} 就能在日志里伪造一整行（例如伪造一条 {@code AUDIT event=login_ok}），
  *       这是最典型的日志注入；</li>
  *   <li><b>脱敏</b>——登录框和密码框挨着，用户把密码填进账号框并不罕见。账号写进
  *       {@code login_log} 是为了运维排查（谁在什么时候被锁），但如果存的是密码就成了
- *       明文凭据泄漏。所以只有"像账号"的值才原样落库，其余一律只存哈希前 8 位。</li>
+ *       明文凭据泄漏。</li>
  * </ul>
  *
- * <p>"像账号"的判定故意保守但简单：纯数字（学号）、含 {@code @}（邮箱）、或只由
- * {@code [A-Za-z0-9._@+-]} 组成且不超过 40 字符（用户名 / 学号 / 邮箱的常见形态）。
- * 超出这个形态的（带空格、带符号、超长）当作"不是账号"，只存哈希。这条规则挡不住
- * 形如 {@code abc12345} 的纯字母数字密码，所以账号框脱敏只是纵深防御的一层，
- * 真正的防线是"密码不进日志"这条开发约束。</p>
+ * <p><b>判定规则（v0.1.9 改）</b>：不再靠"长得像不像账号"来猜，而是看
+ * <b>这次输入是否真的对应一个存在的账号</b>：</p>
+ * <ul>
+ *   <li>账号存在 → 原样落库（运维需要按账号检索）；</li>
+ *   <li>账号不存在 → 一律只存 {@code <masked:哈希前8位>}。</li>
+ * </ul>
+ *
+ * <p>改的原因：注册规则要求密码 8–50 位且含字母和数字，于是典型密码
+ * {@code abc12345} 与"纯字母数字用户名"在形态上完全无法区分，任何基于形态的
+ * 白名单都会把密码原样存下来。"账号存在与否"是可以确定的知识，用它判定既简单又
+ * 没有漏网的 case。代价是运维看不到陌生人填错的那串原文，但哈希前缀仍能把这几次
+ * 尝试关联起来。</p>
  */
 public final class AuditSanitizer {
 
@@ -31,10 +37,6 @@ public final class AuditSanitizer {
 
     /** 落库的账号上限，与 {@code login_log.account} 的列宽一致。 */
     private static final int ACCOUNT_MAX = 128;
-
-    private static final Pattern STUDENT_ID = Pattern.compile("\\d{4,20}");
-    private static final Pattern EMAIL = Pattern.compile("[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,190}");
-    private static final Pattern PLAIN = Pattern.compile("[A-Za-z0-9._@+-]{1,40}");
 
     private AuditSanitizer() {
     }
@@ -48,32 +50,27 @@ public final class AuditSanitizer {
     }
 
     /**
-     * 清洗后用于落库的账号值：像账号就原样保留，不像就只留哈希。
+     * 清洗后用于落库的账号值：账号存在才原样保留，不存在一律只留哈希。
      *
+     * @param raw           用户当次输入的账号框内容（可能是密码）
+     * @param accountExists 这次输入是否解析到了一个真实存在的账号
      * @return 清洗/脱敏后的值，永不为 {@code null}
      */
-    public static String accountForStorage(String raw) {
+    public static String accountForStorage(String raw, boolean accountExists) {
         String cleaned = clean(raw, ACCOUNT_MAX);
         if (cleaned.isEmpty()) {
             return "";
         }
-        return looksLikeAccount(cleaned) ? cleaned : mask(raw);
+        if (!accountExists) {
+            return mask(raw);
+        }
+        return cleaned;
     }
 
     /** 脱敏形态：{@code <masked:1a2b3c4d>}，只留 SHA-256 前 8 位，不可逆。 */
     public static String mask(String raw) {
         String source = raw == null ? "" : raw;
         return "<masked:" + sha256Hex(source).substring(0, 8) + ">";
-    }
-
-    /** 判定一个（已清洗的）值是否"像账号"。 */
-    static boolean looksLikeAccount(String value) {
-        if (value.length() > 40 && !value.contains("@")) {
-            return false;
-        }
-        return STUDENT_ID.matcher(value).matches()
-                || EMAIL.matcher(value).matches()
-                || PLAIN.matcher(value).matches();
     }
 
     private static String clean(String value, int max) {

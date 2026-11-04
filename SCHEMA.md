@@ -675,11 +675,16 @@ CREATE INDEX IF NOT EXISTS idx_login_log_created      ON login_log(created_at);
 v0.1.9 起分两条计数线，用 `scope` 区分：
 
 - `scope='pair'`：`(账号, IP)` 组合的连续失败，达到 `app.security.login-max-failures`（默认 5）锁
-  `login-lock-millis`（默认 15 分钟）。攻击者只能锁住自己那台机器的组合，锁不到受害者在别处的登录。
+  `login-lock-millis`（默认 15 分钟）。计数带窗口：`login-pair-window-minutes`（默认 60）分钟内没有
+  新失败就从 1 重新计数，避免几周里零星错几次就被锁。IP 维度对 IPv6 归一到 `/64`（同一用户网络换地址
+  不算换 key）。攻击者只能锁住自己那台机器的组合，锁不到受害者在别处的登录。
 - `scope='account'`：同一账号 1 小时窗口内的总失败，达到 `login-total-failures-per-hour`（默认 30）
   锁 `login-total-lock-millis`（默认 30 分钟）。换 IP 的分布式猜密码会撞上这一层。
-- 管理员账号（`users.type = 2`）默认**只受 pair 层限制**（`login-admin-total-lock-enabled=false`），
-  避免外网把管理员账号整体锁死。
+  该层锁住后**不拒绝账号近期成功登录过的 IP**（`login-trusted-ip-days`，默认 30 天，数据取自
+  `login_log` 的成功记录），否则攻击者用两个 IP 就能把受害者锁在门外。
+- 管理员账号（`users.type = 2`）**仍计入 account 层**，但超阈值只告警不上锁
+  （`login-admin-total-lock-enabled=false`），避免外网把管理员账号整体锁死；生产必须同时开
+  `app.security.admin-intranet-only=true`。
 
 ```sql
 CREATE TABLE IF NOT EXISTS login_attempt (

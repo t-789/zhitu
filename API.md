@@ -21,20 +21,23 @@
 | GET | `/api/auth/me` | 已登录 | 身份信息，**不含学院/专业/年级**（那些在 `/api/profiles/me`）；`status`：1 正常 / 0 封禁。未登录 401 信封 |
 | GET | `/api/auth/csrf` | 无 | `data`：`headerName`(`X-XSRF-TOKEN`)/`parameterName`/`token`，并下发 `XSRF-TOKEN` Cookie |
 
-#### 登录锁定与审计（v0.1.5）
+#### 登录锁定与审计（v0.1.9）
 
 锁定分两层，两层都持久化在 `login_attempt` 表（进程重启不失效），键分别是 `(pair, 账号|IP)` 和 `(account, 账号)`：
 
 | 层 | 触发条件 | 默认锁定时长 | 配置键 | 说明 |
 |----|----------|--------------|--------|------|
-| 第一层 账号+IP | 同一账号在同一 IP 连续失败 5 次 | 15 分钟 | `app.security.login-max-failures` / `login-lock-millis` | 攻击者只能锁住自己那对组合，锁不住受害者在别处的登录 |
-| 第二层 账号总量 | 同一账号 1 小时内累计失败 30 次（不分 IP） | 30 分钟 | `app.security.login-total-window-minutes` / `login-total-failures-per-hour` / `login-total-lock-millis` | 分布式猜密码要换很多 IP 才会撞上；同时提高了用大量 IP 做 DoS 的门槛 |
+| 第一层 账号+IP | 同一账号在同一 IP 的 **60 分钟窗口内**连续失败 5 次 | 15 分钟 | `app.security.login-max-failures` / `login-lock-millis` / `login-pair-window-minutes` | 攻击者只能锁住自己那对组合，锁不住受害者在别处的登录；窗口内没有新失败就清零 |
+| 第二层 账号总量 | 同一账号 1 小时内累计失败 30 次（不分 IP） | 30 分钟 | `app.security.login-total-window-minutes` / `login-total-failures-per-hour` / `login-total-lock-millis` | 分布式猜密码要换很多 IP 才会撞上 |
 
-- **管理员豁免**：`users.type = 2` 的账号默认**只受第一层**约束（`app.security.login-admin-total-lock-enabled=false`），避免外网把管理员账号锁死；管理员登录仍应走 `/adminlogin` 与内网保护。
+- **可信 IP 豁免**：第二层锁住时，**不拒绝该账号近 `login-trusted-ip-days`（默认 30）天内成功登录过的 IP**。原因：第一层把攻击者当前 IP 锁住后，后续失败不再计入第二层，所以两个 IP 就能把受害者账号推进第二层；豁免后受害者从常用网络照常登录，陌生 IP 仍被挡。来源是 `login_log` 的成功记录（按 `user_id` 查，不新增表）。
+- **IPv6**：第一层的 IP 维度归一到 `/64`（一个前缀通常就是一个用户网络），换地址不算换 key。
+- **管理员**：`users.type = 2` 的账号**仍计入**账号总量，但超阈值**只告警不上锁**（`app.security.login-admin-total-lock-enabled=false`），因此也不会因为"第 30 次失败是否返回 423"被拿去判定账号身份。管理员登录应走 `/adminlogin`，生产必须打开 `app.security.admin-intranet-only=true`。
 - 把 `login-lock-millis` 或 `login-total-lock-millis` 配成 `0` 即**关闭该层锁定**（只计数不锁）。
 - 锁定中返回 423 + `Retry-After: <秒>`；已被锁定的记录不会因新的失败而**延长**（防止攻击者持续续锁）。
-- 每次登录尝试（成功与失败）都写 `login_log`：`account / user_id / ip_address / user_agent / status(1 成功, 0 失败) / failure_reason / created_at`。`account` 落库前经 `AuditSanitizer` 清洗——控制字符被剔除、不像账号的串（如误把密码填进账号框）存成 `<masked:xxxxxxxx>`，便于排查又不落明文。
+- 每次登录尝试（成功与失败）都写 `login_log`：`account / user_id / ip_address / user_agent / status(1 成功, 0 失败) / failure_reason / created_at`。`account` 落库前经 `AuditSanitizer` 清洗——控制字符被剔除；**账号不存在时一律存成 `<masked:xxxxxxxx>`**（登录框里填的可能是密码，`abc12345` 这种也符合注册规则，形态判断不可靠），账号存在才原样保留以便运维检索。
 - 清理：`LoginCleanupJob` 每小时（`app.security.login-cleanup-cron`）删除过期锁定、`login-attempt-retention-days`(30) 天未动的计数行、`login-log-retention-days`(90) 天前的审计行。
+- 旧表（v0.1.5 的 `attempt_key` 单列主键、epoch 毫秒）在启动时于**单个事务**内迁移为新结构，中途失败整段回滚。
 
 `/front/login` 与 `/front/register` 支持 `?redirect=<路径>`：只接受站内绝对路径，`SafeRedirect` 会拒绝 `//host`、反斜杠、`%2f/%5c/%2e`、`.`/`..` 段、尾斜杠与小写归一化后命中登录/注册/管理页的路径，非法值回落到 `/front/profile`。
 
