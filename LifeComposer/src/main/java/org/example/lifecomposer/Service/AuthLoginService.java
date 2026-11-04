@@ -158,6 +158,9 @@ public class AuthLoginService {
 
     /** 封禁原因归一为"账户被封禁"，不把解封时间写进审计原因。 */
     private static String banReason(String message) {
-        return message != null && message.contains("封禁") ? "账户被封禁" : String.valueOf(message);
+        if (message == null) {
+            return "登录被拒绝";
+        }
+        return message.contains("封禁") ? "账户被封禁" : message;
     }
 }
