@@ -2,7 +2,7 @@
 
 ## 概述
 
-本系统面向北邮大学生成长规划场景，基于 SQLite 数据库存储。当前设计包含 12 张表，全部已实现；v0.0.4 为 `rag_chunks` 增加 embedding 字段，v0.0.5 增加聊天用量表：
+本系统面向北邮大学生成长规划场景，基于 SQLite 数据库存储。当前设计包含 17 张表，全部已实现；v0.0.4 为 `rag_chunks` 增加 embedding 字段，v0.0.5 增加聊天用量表，v0.1.5 增加登录失败计数与登录审计两张表：
 
 | 表名 | 用途 |
 |------|------|
@@ -21,6 +21,8 @@
 | `profile_change_candidates` | v0.1 M2 聊天提议的画像变更候选（待确认/已确认/已拒绝/过期/冲突） |
 | `user_capability_states` | v0.1 M4 用户能力最小状态（等级/证据/来源/置信度） |
 | `recommendation_feedback` | v0.1 M6 推荐反馈（方向、类型、评分配置版本、快照） |
+| `login_attempt` | v0.1.5 登录失败计数（v0.1.9 起分 `pair` / `account` 两层） |
+| `login_log` | v0.1.5 登录审计（成功/失败、IP、UA、失败原因） |
 
 > **注意**：SQLite 当前 `PRAGMA foreign_keys = OFF`（默认），表之间的 `REFERENCES` 约束仅作为逻辑关联标注，运行时不强制。
 
@@ -632,6 +634,101 @@ CREATE TABLE IF NOT EXISTS recommendation_feedback (
 
 - v0.1 只做可观察、可审计的反馈收集，不做在线学习；`scoring_version` 与快照字段保证历史推荐可解释。
 
+## 登录安全相关表（v0.1.5 / v0.1.9）
+
+登录失败计数与登录审计都落在独立的小表里，**不动 `users`**：`users` 只放账号本身，
+计数和审计有各自的保留期与清理任务。两张表分别由 `LoginLogRepository` / `LoginAttemptRepository`
+的 `createTableIfNeeded()` 建，在 `DatabaseInitializer.init()` 里按顺序调用。
+
+### `login_log`（登录审计）✅ v0.1.5 新增
+
+```sql
+CREATE TABLE IF NOT EXISTS login_log (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id        INTEGER,                    -- 账号不存在时为 NULL
+  account        TEXT NOT NULL,              -- 客户端提交的原始账号（已截断 128）
+  ip_address     TEXT,                       -- 已截断 64
+  user_agent     TEXT,                       -- 已截断 256
+  status         INTEGER NOT NULL,           -- 0=失败 1=成功
+  failure_reason TEXT,                       -- 仅失败行，已截断 200
+  created_at     TEXT NOT NULL DEFAULT (datetime('now'))   -- UTC 文本
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_log_account_time ON login_log(account, created_at);
+CREATE INDEX IF NOT EXISTS idx_login_log_created      ON login_log(created_at);
+```
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `user_id` | 命中的账号 ID；账号不存在时为 `NULL` | 3 |
+| `account` | 客户端提交的账号原文 | '20260001' |
+| `ip_address` | 客户端 IP（反代下需 `forward-headers-strategy` 才准） | '10.3.2.1' |
+| `user_agent` | 请求头 UA | 'Mozilla/5.0 …' |
+| `status` | `0` 失败 / `1` 成功 | 0 |
+| `failure_reason` | 失败原因（账号不存在 / 密码错误累计 N 次 / 触发锁定 / 锁定中 / 被封禁 / 临时密码过期） | '密码错误，累计失败 3 次' |
+| `created_at` | UTC 文本 `yyyy-MM-dd HH:mm:ss` | '2026-11-04 02:29:45' |
+
+**保留期**：`app.security.login-log-retention-days`（默认 90 天），由 `LoginCleanupJob` 每日清理。
+
+### `login_attempt`（登录失败计数）✅ v0.1.5 新增，v0.1.9 改分层
+
+v0.1.9 起分两条计数线，用 `scope` 区分：
+
+- `scope='pair'`：`(账号, IP)` 组合的连续失败，达到 `app.security.login-max-failures`（默认 5）锁
+  `login-lock-millis`（默认 15 分钟）。攻击者只能锁住自己那台机器的组合，锁不到受害者在别处的登录。
+- `scope='account'`：同一账号 1 小时窗口内的总失败，达到 `login-total-failures-per-hour`（默认 30）
+  锁 `login-total-lock-millis`（默认 30 分钟）。换 IP 的分布式猜密码会撞上这一层。
+- 管理员账号（`users.type = 2`）默认**只受 pair 层限制**（`login-admin-total-lock-enabled=false`），
+  避免外网把管理员账号整体锁死。
+
+```sql
+CREATE TABLE IF NOT EXISTS login_attempt (
+  scope        TEXT NOT NULL,                -- 'pair' | 'account'
+  attempt_key  TEXT NOT NULL,                -- pair: '账号|IP'；account: '账号'
+  failures     INTEGER NOT NULL DEFAULT 0,   -- 当前窗口/连续失败数
+  window_start TEXT NOT NULL DEFAULT (datetime('now')),
+  locked_until TEXT,                         -- NULL = 未锁定；UTC 文本
+  updated_at   TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (scope, attempt_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempt_locked  ON login_attempt(locked_until);
+CREATE INDEX IF NOT EXISTS idx_login_attempt_updated ON login_attempt(updated_at);
+```
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `scope` | 计数线：`pair` / `account` | 'pair' |
+| `attempt_key` | 计数键（账号已 trim+lowercase） | '20260001\|10.3.2.1' |
+| `failures` | 连续失败数（pair）或窗口内失败数（account） | 5 |
+| `window_start` | 本轮计数窗口起点（account 层据此重置） | '2026-11-04 02:14:11' |
+| `locked_until` | 锁定截止时间，`NULL` 表示未锁定 | '2026-11-04 02:29:45' |
+| `updated_at` | 最近一次更新 | '2026-11-04 02:14:11' |
+
+**并发安全**：计数用单条 upsert 完成，不做"先读后写"：
+```sql
+INSERT INTO login_attempt(scope, attempt_key, failures, window_start, updated_at)
+VALUES (?, ?, 1, datetime('now'), datetime('now'))
+ON CONFLICT(scope, attempt_key) DO UPDATE SET
+  failures   = failures + 1,
+  updated_at = datetime('now')
+RETURNING failures;
+```
+account 层把 `failures = failures + 1` 换成
+`failures = CASE WHEN window_start <= datetime('now', '-60 minutes') THEN 1 ELSE failures + 1 END`。
+
+**锁定不续期**：`lock()` 的 `WHERE` 带 `(locked_until IS NULL OR locked_until <= datetime('now'))`，
+已锁定时不会因为继续失败而延长，避免攻击者把受害者无限期锁在门外。
+
+**保留期与清理**：`login-attempt-retention-days`（默认 30 天）后清掉非锁定的空闲行；
+过期锁在读到时就删。清理任务 `LoginCleanupJob`（`@Scheduled`，cron 取 `app.security.login-cleanup-cron`，默认每小时）。
+
+**迁移**：v0.1.5 的旧表（`attempt_key` 主键、`locked_until` 为 epoch 毫秒）在启动时由
+`LoginAttemptRepository.migrateLegacyTableIfNeeded()` 自动搬进新结构，旧行按 `scope='account'` 解释
+（旧语义是"按账号锁 5 次"）——升级后这些行仍有效，但适用的是 30 次那个更宽的阈值。
+
+---
+
 ## 建表顺序
 
 由于存在外键依赖，建表应遵循以下顺序：
@@ -649,6 +746,9 @@ CREATE TABLE IF NOT EXISTS recommendation_feedback (
 10. capability_tags（无外部依赖）
 11. capability_reference（无外部依赖，字典内容弱引用 capability_tags.name）
 12. chat_usage_daily（无外部依赖）
+13. recommendation_feedback（依赖 users）
+14. login_attempt（无外部依赖）
+15. login_log（无外部依赖，写入在事务外、失败不阻断登录）
 ```
 
 > 上述建表逻辑在 `DatabaseInitializer.init()` 方法中通过 `createXxxTableIfNeeded()` 逐步执行。
@@ -715,6 +815,6 @@ Milestone 7 管理控制台带来按用户/状态/类型/日期的分页筛选�
 ---
 
 *设计日期：2026-06-11*
-*更新日期：2026-09-23（v0.1：user_profiles 新增 version；新增 profile_change_candidates / user_capability_states / recommendation_feedback。2026-09-14：v0.0.6 Milestone 6/7，无表结构变更，补充管理控制台索引与时间戳归一化说明。2026-09-05 第二轮：移除 goals 表并入 user_profiles.goals；resources 改双键 AUTOINCREMENT id + 唯一业务 id resource_id；前轮：college_credit_rules 加 levels_json/notes，user_profiles 加 available_time/goals，新增 resources / rag_chunks / capability_tags / capability_reference）*
+*更新日期：2026-11-04（v0.1.9：新增「登录安全相关表」一节，补 `login_attempt`（pair/account 分层、并发安全 upsert、锁定不续期、保留期）与 `login_log`（审计字段与保留期）的 DDL 与迁移说明；建表顺序补 13–15。2026-09-23：v0.1：user_profiles 新增 version；新增 profile_change_candidates / user_capability_states / recommendation_feedback。2026-09-14：v0.0.6 Milestone 6/7，无表结构变更，补充管理控制台索引与时间戳归一化说明。2026-09-05 第二轮：移除 goals 表并入 user_profiles.goals；resources 改双键 AUTOINCREMENT id + 唯一业务 id resource_id；前轮：college_credit_rules 加 levels_json/notes，user_profiles 加 available_time/goals，新增 resources / rag_chunks / capability_tags / capability_reference）*
 *参考文件：信通院创新实践活动加分办法_2023级起适用.pdf；样例/SAMPLES-README.md（数据交付包 2026-09-05 快照）*
 *实际代码：LifeComposer/src/main/java/org/example/lifecomposer/Repository/*.java*

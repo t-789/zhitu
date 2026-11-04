@@ -6,6 +6,7 @@ import org.example.lifecomposer.Entity.User;
 import org.example.lifecomposer.Repository.LoginLogRepository;
 import org.example.lifecomposer.Repository.UserRepository;
 import org.example.lifecomposer.Security.SessionCredential;
+import org.example.lifecomposer.config.AppSecurityProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,17 +44,20 @@ public class AuthLoginService {
     private final UserDetailsService userDetailsService;
     private final LoginAttemptService loginAttemptService;
     private final LoginLogRepository loginLogRepository;
+    private final AppSecurityProperties securityProperties;
 
     public AuthLoginService(UserService userService,
                             UserRepository userRepository,
                             UserDetailsService userDetailsService,
                             LoginAttemptService loginAttemptService,
-                            LoginLogRepository loginLogRepository) {
+                            LoginLogRepository loginLogRepository,
+                            AppSecurityProperties securityProperties) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
         this.loginAttemptService = loginAttemptService;
         this.loginLogRepository = loginLogRepository;
+        this.securityProperties = securityProperties;
     }
 
     public Result login(String account, String password, HttpServletRequest httpRequest) {
@@ -64,11 +68,17 @@ public class AuthLoginService {
         String clientIp = httpRequest == null ? "unknown" : httpRequest.getRemoteAddr();
         String userAgent = httpRequest == null ? null : httpRequest.getHeader("User-Agent");
         Integer knownUserId = existing == null ? null : existing.getId();
+        // 第二层（账号总量）按配置决定是否适用；管理员默认豁免，免得外网锁死管理员。
+        boolean accountLevelLock = !(existing != null
+                && Integer.valueOf(2).equals(existing.getType())
+                && !securityProperties.isLoginAdminTotalLockEnabled());
 
-        if (loginAttemptService.isLocked(attemptKey)) {
-            long retryAfter = loginAttemptService.retryAfterSeconds(attemptKey);
-            LOG.warn("AUDIT event=login_locked username={} ip={} retryAfterSeconds={}",
-                    auditName, clientIp, retryAfter);
+        LoginAttemptService.LockStatus lockStatus =
+                loginAttemptService.check(attemptKey, clientIp, accountLevelLock);
+        if (lockStatus.locked()) {
+            long retryAfter = lockStatus.retryAfterSeconds();
+            LOG.warn("AUDIT event=login_locked username={} ip={} scope={} retryAfterSeconds={}",
+                    auditName, clientIp, lockStatus.layer(), retryAfter);
             audit(knownUserId, account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,
                     "账号锁定中，剩余 " + minutes(retryAfter) + " 分钟");
             return new Result(Status.LOCKED, null, retryAfter, "登录失败次数过多，请稍后再试");
@@ -76,12 +86,15 @@ public class AuthLoginService {
         try {
             User user = userService.login(account, password);
             if (user == null) {
-                int failures = loginAttemptService.recordFailure(attemptKey);
-                LOG.warn("AUDIT event=login_failure username={} ip={}", auditName, clientIp);
+                LoginAttemptService.FailureOutcome outcome =
+                        loginAttemptService.recordFailure(attemptKey, clientIp, accountLevelLock);
+                int failures = outcome.failures();
+                LOG.warn("AUDIT event=login_failure username={} ip={} scope={} locked={}",
+                        auditName, clientIp, outcome.layer(), outcome.locked());
                 String reason;
                 if (existing == null) {
                     reason = "账号不存在";
-                } else if (failures >= loginAttemptService.maxFailures()) {
+                } else if (outcome.locked()) {
                     reason = "密码错误，累计失败 " + failures + " 次触发锁定";
                 } else {
                     reason = "密码错误，累计失败 " + failures + " 次";
@@ -91,7 +104,7 @@ public class AuthLoginService {
             }
             if (Boolean.TRUE.equals(user.getPasswordResetRequired())
                     && userService.isTemporaryPasswordExpired(user)) {
-                loginAttemptService.recordFailure(attemptKey);
+                loginAttemptService.recordFailure(attemptKey, clientIp, accountLevelLock);
                 LOG.warn("AUDIT event=login_rejected_temp_password_expired username={} ip={}",
                         auditName, clientIp);
                 audit(user.getId(), account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,
@@ -99,7 +112,7 @@ public class AuthLoginService {
                 return Result.of(Status.TEMP_PASSWORD_EXPIRED, "临时密码已过期，请联系管理员重新下发");
             }
 
-            loginAttemptService.recordSuccess(attemptKey);
+            loginAttemptService.recordSuccess(attemptKey, clientIp);
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
             Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -125,7 +138,7 @@ public class AuthLoginService {
             }
             return new Result(Status.OK, user, 0, "登录成功");
         } catch (IllegalStateException e) {
-            loginAttemptService.recordFailure(attemptKey);
+            loginAttemptService.recordFailure(attemptKey, clientIp, accountLevelLock);
             LOG.warn("AUDIT event=login_failure username={} ip={} reason={}",
                     auditName, clientIp, e.getMessage());
             audit(knownUserId, account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,

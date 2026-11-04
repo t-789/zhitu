@@ -55,11 +55,35 @@ public class AppSecurityProperties {
     /** Registration attempts per client IP per minute. */
     private int registerPerMinutePerIp = 10;
 
-    /** Consecutive login failures before a temporary lock. */
+    /**
+     * 第一层（账号 + IP）连续失败阈值。校园网出口 IP 相同会互相误伤，
+     * 生产环境建议放宽到 10（见对接文档 C 节）。
+     */
     private int loginMaxFailures = 5;
 
-    /** Temporary login lock duration. */
+    /** 第一层锁定持续时间。 */
     private long loginLockMillis = 15 * 60_000L;
+
+    /** 第二层（账号总量，不分 IP）的统计窗口，单位分钟。 */
+    private int loginTotalWindowMinutes = 60;
+
+    /** 第二层窗口内失败次数阈值；分布式换 IP 猜密码会撞上这一层。 */
+    private int loginTotalFailuresPerHour = 30;
+
+    /** 第二层锁定持续时间。 */
+    private long loginTotalLockMillis = 30 * 60_000L;
+
+    /** 管理员（type=2）是否也受第二层约束；默认 false，只受第一层 IP 维度限制。 */
+    private boolean loginAdminTotalLockEnabled = false;
+
+    /** login_attempt 计数行的保留天数（长期无更新则清理）。 */
+    private int loginAttemptRetentionDays = 30;
+
+    /** login_log 审计行的保留天数。 */
+    private int loginLogRetentionDays = 90;
+
+    /** 登录相关清理任务的 cron（默认每小时整点）。 */
+    private String loginCleanupCron = "0 0 * * * *";
 
     /** When true, admin endpoints only accept private/loopback client addresses. */
     private boolean adminIntranetOnly = false;
