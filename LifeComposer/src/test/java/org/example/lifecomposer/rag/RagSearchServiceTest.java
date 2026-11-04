@@ -4,8 +4,10 @@ import org.example.lifecomposer.Entity.RagChunk;
 import org.example.lifecomposer.Repository.RagChunkRepository;
 import org.example.lifecomposer.Repository.RagChunkRepository.EmbeddingFingerprint;
 import org.example.lifecomposer.Repository.RagChunkRepository.EmbeddingRow;
+import org.example.lifecomposer.Repository.RagChunkRepository.KeywordRow;
 import org.example.lifecomposer.config.RagConfig;
 import org.example.lifecomposer.embedding.EmbeddingClient;
+import org.example.lifecomposer.embedding.EmbeddingException;
 import org.example.lifecomposer.embedding.EmbeddingResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +40,7 @@ class RagSearchServiceTest {
         when(embeddingClient.getModel()).thenReturn(MODEL);
         when(embeddingClient.isEnabled()).thenReturn(true);
         repository = mock(RagChunkRepository.class);
-        when(repository.embeddingFingerprint()).thenReturn(new EmbeddingFingerprint(0, null));
+        when(repository.embeddingFingerprint()).thenReturn(new EmbeddingFingerprint(0, null, 0));
         config = new RagConfig();
         config.setDefaultTopK(5);
         config.setMinSimilarity(0.2);
@@ -123,7 +125,7 @@ class RagSearchServiceTest {
         service.search("a", null);
 
         // The import CLI (another process) added an embedding.
-        when(repository.embeddingFingerprint()).thenReturn(new EmbeddingFingerprint(1, "2026-11-04T10:00:00Z"));
+        when(repository.embeddingFingerprint()).thenReturn(new EmbeddingFingerprint(1, "2026-11-04T10:00:00Z", 1));
         service.search("b", null);
         service.search("c", null);
 
@@ -186,6 +188,117 @@ class RagSearchServiceTest {
 
         assertTrue(service().search("q", null).isEmpty());
         verify(repository, times(0)).findByChunkIds(anyCollection());
+    }
+
+    // ---- hybrid retrieval -------------------------------------------------
+
+    private void keywords(KeywordRow... rows) {
+        when(repository.findKeywordRows()).thenReturn(List.of(rows));
+    }
+
+    private static KeywordRow kw(String id, String title, String text) {
+        return new KeywordRow(id, title, text);
+    }
+
+    @Test
+    void keywordRecallFindsANameTheVectorsMiss() {
+        queryVector(1.0, 0.0);
+        // Both vectors are orthogonal to the query, so the vector ranking is empty.
+        stored(row("rag_001", "[0.0,1.0]"), row("rag_002", "[0.0,1.0]"));
+        keywords(kw("rag_001", "竞赛概述", "全国大学生数学建模竞赛面向在校生"),
+                kw("rag_002", "综测加分规则", "参加竞赛可以获得综测加分"));
+
+        List<RagHit> hits = service().search("综测", null);
+
+        assertEquals(List.of("rag_002"), hits.stream().map(RagHit::chunkId).toList());
+        assertEquals("keyword", hits.get(0).matchedBy());
+        assertNotNull(hits.get(0).similarity(), "the chunk has a vector, so its similarity is still reported");
+    }
+
+    @Test
+    void chunkFoundByBothRankingsOutranksChunksFoundByOne() {
+        queryVector(1.0, 0.0);
+        stored(row("rag_a", "[1.0,0.0]"), row("rag_b", "[0.9,0.1]"), row("rag_c", "[0.0,1.0]"));
+        keywords(kw("rag_a", "无关", "无关内容"),
+                kw("rag_b", "蓝桥杯备赛", "蓝桥杯需要提前准备"),
+                kw("rag_c", "蓝桥杯", "蓝桥杯蓝桥杯蓝桥杯"));
+
+        List<RagHit> hits = service().search("蓝桥杯", 5);
+
+        // rag_b: vector rank 2 + keyword rank 2 ; rag_a: vector rank 1 only ; rag_c: keyword rank 1 only
+        assertEquals("rag_b", hits.get(0).chunkId());
+        assertEquals("both", hits.get(0).matchedBy());
+        assertEquals(java.util.Set.of("rag_a", "rag_c"),
+                hits.stream().skip(1).map(RagHit::chunkId).collect(java.util.stream.Collectors.toSet()));
+    }
+
+    @Test
+    void chunkWithoutAnEmbeddingIsStillFoundByKeyword() {
+        queryVector(1.0, 0.0);
+        stored(row("rag_001", "[1.0,0.0]"));
+        keywords(kw("rag_001", "无关", "无关内容"), kw("rag_009", "保研政策", "保研加分细则"));
+        when(repository.findByChunkIds(anyCollection())).thenAnswer(inv -> {
+            java.util.Collection<?> ids = inv.getArgument(0);
+            return ids.stream().map(id -> chunk(String.valueOf(id))).toList();
+        });
+
+        List<RagHit> hits = service().search("保研", 5);
+
+        RagHit unembedded = hits.stream().filter(h -> h.chunkId().equals("rag_009")).findFirst().orElseThrow();
+        assertEquals("keyword", unembedded.matchedBy());
+        assertNull(unembedded.similarity());
+    }
+
+    @Test
+    void embeddingOutageFallsBackToKeywordSearch() {
+        when(embeddingClient.embed(anyString())).thenThrow(new EmbeddingException("ollama down"));
+        stored(row("rag_001", "[1.0,0.0]"));
+        keywords(kw("rag_001", "综测加分", "综测加分规则"));
+
+        List<RagHit> hits = service().search("综测", null);
+
+        assertEquals(1, hits.size());
+        assertEquals("keyword", hits.get(0).matchedBy());
+    }
+
+    @Test
+    void embeddingOutageWithNoKeywordMatchIsReportedAsUnavailable() {
+        when(embeddingClient.embed(anyString())).thenThrow(new EmbeddingException("ollama down"));
+        stored(row("rag_001", "[1.0,0.0]"));
+        keywords(kw("rag_001", "综测加分", "综测加分规则"));
+
+        // "nothing matched" would be indistinguishable from "the knowledge base has no answer".
+        assertThrows(RagSearchException.class, () -> service().search("完全不相干的问题", null));
+    }
+
+    @Test
+    void disablingHybridRestoresPureVectorSearch() {
+        queryVector(1.0, 0.0);
+        stored(row("rag_001", "[1.0,0.0]"), row("rag_002", "[0.0,1.0]"));
+        keywords(kw("rag_002", "综测", "综测"));
+        config.setHybridEnabled(false);
+
+        List<RagHit> hits = service().search("综测", null);
+
+        assertEquals(List.of("rag_001"), hits.stream().map(RagHit::chunkId).toList());
+        assertEquals("vector", hits.get(0).matchedBy());
+        assertEquals(hits.get(0).similarity(), hits.get(0).score(), 1e-9);
+        // and an embedding outage is an error again, as before
+        when(embeddingClient.embed(anyString())).thenThrow(new EmbeddingException("down"));
+        assertThrows(RagSearchException.class, () -> service().search("综测", null));
+    }
+
+    @Test
+    void rebuildsWhenOnlyAnUnembeddedChunkWasAdded() {
+        queryVector(1.0, 0.0);
+        stored(row("rag_001", "[1.0,0.0]"));
+        RagSearchService service = service();
+        service.search("a", null);
+
+        when(repository.embeddingFingerprint()).thenReturn(new EmbeddingFingerprint(0, null, 1));
+        service.search("b", null);
+
+        verify(repository, times(2)).findKeywordRows();
     }
 
     @Test

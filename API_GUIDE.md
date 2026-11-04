@@ -948,7 +948,7 @@ if (res.status === 429) { /* JSON 配额体，非 SSE */ }
 
 > ⚠️ **注意 `embeddingJson`**：该端点会把**完整向量**返回给任意已登录用户。管理控制台（`/api/admin/rag-chunks`）刻意只返回 `embeddingJsonLength` 而不返回向量，但本端点没有做同样的裁剪。详见 [第 9 节](#9-已知注意事项与风险)。
 
-> 另有内部检索服务 `RagSearchService`（topK 默认 5 / 最大 20，相似度阈值 0.2）供 Agent 的 `search_rag` 工具使用，**未暴露为 HTTP 端点**。
+> 另有内部检索服务 `RagSearchService`（topK 默认 5 / 最大 20，相似度阈值 0.2；默认向量 + 关键词混合检索）供 Agent 的 `search_rag` 工具使用，**未暴露为 HTTP 端点**。embedding 服务不可用时，只要关键词能命中仍会返回结果；关键词也无命中则报 `RAG_UNAVAILABLE`，不会伪装成“没有相关资料”。
 
 ---
 
@@ -1212,7 +1212,7 @@ if (res.status === 429) { /* JSON 配额体，非 SSE */ }
 | `get_user_credit_activities` | 读取当前用户加分记录 | 无 | `{count, items:[{id,creditType,category,compName,compLevel,awardTier,credits,obtainedDate,verified,notes}]}` |
 | `query_credit_rules` | 查询加分规则 | `college?`(模糊), `creditType?`, `category?`, `compLevel?`, `awardTier?`, `limit?`(默认 20，最大 50) | `{count, items:[{id,college,creditType,category,compLevel,compName,awardTier,credits,categoryCap,teamFormula,studentCohort,notes}]}` |
 | `search_resources` | 检索成长资源库 | `keyword?`(匹配名称/描述), `type?`(competition/course), `difficulty?`(easy/medium/hard), `majorCategory?` | `{count, items:[{id,name,type,difficulty,description,targetMajors,requiredSkills,bonusPoint,sourceUrl}]}` |
-| `search_rag` | 检索知识库片段 | `query`（**必填**）, `topK?`（默认 5，最大 20） | `{count, items:[{chunkId,title,text,sourceType,sourceUrl,sourceFile,pageOrSection,relatedResourceId,similarity}]}` |
+| `search_rag` | 检索知识库片段（向量 + 关键词 BM25 经 RRF 融合） | `query`（**必填**）, `topK?`（默认 5，最大 20） | `{count, items:[{chunkId,title,text,sourceType,sourceUrl,sourceFile,pageOrSection,relatedResourceId,similarity,score,matchedBy}]}`；`matchedBy` 为 `vector`/`keyword`/`both`；`similarity` 在该片段没有可比较向量时为 `null`；`score` 是排序依据（混合模式为 RRF 分，纯向量模式等于 `similarity`） |
 
 **工具层错误码**（出现在 `tool_result` 的 `errorCode` 字段）：`UNKNOWN_TOOL`、`INVALID_ARGUMENTS`、`TOOL_EXECUTION_ERROR`、`EMPTY_TOOL_RESULT`、`RAG_UNAVAILABLE`
 
@@ -1286,6 +1286,7 @@ if (res.status === 429) { /* JSON 配额体，非 SSE */ }
 | `lifecomposer.admin.console-preview-length` | `300` | 列表预览截断长度（最小 40） |
 | `lifecomposer.admin.console-diagnostic-length` | `4000` | 详情诊断字段截断长度（最小 200） |
 | `rag.defaultTopK` / `rag.maxTopK` / `rag.minSimilarity` | `5` / `20` / `0.2` | RAG 检索默认参数 |
+| `rag.hybridEnabled` / `rag.hybridCandidateK` | `true` / `20` | 向量 + 关键词（BM25）混合检索；`hybridEnabled=false` 恢复纯向量检索。每路各取前 `hybridCandidateK` 个候选做 RRF 融合 |
 | `rag.indexMaxAgeSeconds` | `300` | 内存向量索引的最长存活时间（安全网，`0` 关闭）。索引在每次检索时用一条聚合查询比对向量集合是否变化，变化即重建；导入 CLI 是独立进程，导入完成后无需重启服务 |
 | `embedding.baseUrl` / `embedding.model` | `http://localhost:11434/v1` / `quentinz/bge-small-zh-v1.5:f16` | 本地 Ollama embedding |
 

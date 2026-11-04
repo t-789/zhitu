@@ -82,6 +82,7 @@ curl -s http://localhost:18000/api/csrf
 修改后至少根据影响范围执行：
 
 - Java/Repository/Service：`./mvnw test -Dspring.profiles.active=test`。
+- RAG 检索评测（需本地 Ollama 与 `样例/rag/`，默认跳过）：`cd LifeComposer && ./mvnw test -Dtest=RagEvalTest -Drag.eval=true [-Drag.eval.dir=../样例/rag]`，输出纯向量 / 纯关键词 / 混合三种模式的 Recall@5、Hit@5、MRR 与逐题命中，用于调整 `minSimilarity`、切片策略、`hybridCandidateK` 时的客观依据。
 - Controller/Security/Session/CSRF：补充或运行对应 MockMvc、契约和权限测试。
 - 数据库迁移：验证空库、已有库、重复启动和 `data.db` 未被测试修改；更新 [`SCHEMA.md`](./SCHEMA.md)。
 - API 响应或错误码：更新 [`API.md`](./API.md) 与 [`API_GUIDE.md`](./API_GUIDE.md)。
