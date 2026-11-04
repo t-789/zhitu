@@ -23,7 +23,7 @@
 - `Exception`：`ValidationExceptionHandler` 处理客户端输入，`GlobalExceptionHandler` 处理全局兜底，Bot 规则由 `BotRequestGuard` 共享。
 - `agent`：`AgentOrchestrator` 最多 8 轮 tool-use，`ToolRegistry` 管理工具白名单，事件监听器支持 SSE 过程展示。
 - `agent/tools`：画像提议、成长方向、能力差距、推荐理由、路径、资源、RAG、加分规则/记录、反馈等工具。
-- `embedding` / `rag`：Ollama embedding、SQLite RAG 检索；默认 `topK=5`、`minSimilarity=0.2`。
+- `embedding` / `rag`：Ollama embedding、SQLite RAG 检索；默认 `topK=5`、`minSimilarity=0.2`。向量在内存中以归一化 `float[]` 缓存（`rag/RagIndex`，余弦即点积），每次检索用 `embeddingFingerprint()` 判断是否重建；只比较与查询向量同一 `embedding_model` 的切片，命中后按 `chunk_id` 回库取标题/正文。
 - `importer`：独立 `DataImportCli` 与 `DataImportService`；导入模式不启动 Web，也不初始化管理员。
 - `recommendation`：读取 `recommendation/directions.json`，使用配置权重进行确定性评分和阶段化路径生成。
 
