@@ -159,6 +159,27 @@ Base URL: http://localhost:18000
 
 访问用户私有数据（画像 / 加分记录 / 规划历史 / 对话）时，服务端**强制**通过 SecurityContext 解析当前用户，**禁止跨用户读取**。跨用户访问已有资源返回 400 + 文本（如 `无权访问此加分记录`），而非 403。
 
+### 2.10 部署注意：反向代理与客户端地址
+
+登录锁定、注册限流、`login_log` 审计都按**客户端地址**分桶，地址取自 `HttpServletRequest.getRemoteAddr()`。放在 nginx / Caddy 之类的反向代理后面时，`getRemoteAddr()` 拿到的是**代理地址**，后果是：
+
+- 注册限流从"每 IP 每分钟 10 次"退化成**全站共享**每分钟 10 次；
+- 登录第一层（账号 + IP）失去意义，所有人共用一个 IP 桶；
+- `login_log.ip_address` 全是 `127.0.0.1` 这类代理地址，审计查不出是谁。
+
+**两种处理方式，选一种**：
+
+1. **应用直连**（默认）：不设 `server.forward-headers-strategy`，代理只做 TLS 终结与端口转发、不改写地址。此时限流按代理地址分桶，只适合单机内网。
+2. **信任代理**（生产推荐）：
+
+   ```properties
+   server.forward-headers-strategy=framework
+   ```
+
+   同时确保**只有**反向代理能访问应用端口（否则任何人都能伪造 `X-Forwarded-For` 绕过限流）。代理需设置 `X-Forwarded-For` / `X-Forwarded-Proto`（nginx：`proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`）。
+
+> 这是部署配置，不在代码里硬编码。切换后请重启并确认 `login_log.ip_address` 记录的是真实客户端地址。
+
 ---
 
 ## 3. 快速上手（完整 curl 流程）

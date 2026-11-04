@@ -84,4 +84,38 @@ class SafeRedirectTest {
     void defaultIsSafe() {
         assertTrue(SafeRedirect.isSafe(SafeRedirect.DEFAULT_AFTER_LOGIN));
     }
+
+    @Test
+    @DisplayName("trailing slash and different case cannot smuggle the login page back in")
+    void normalizedForbiddenPaths() {
+        assertFalse(SafeRedirect.isSafe("/front/login/"));
+        assertFalse(SafeRedirect.isSafe("/front/register/"));
+        assertFalse(SafeRedirect.isSafe("/Front/Login"));
+        assertFalse(SafeRedirect.isSafe("/ADMINLOGIN/"));
+        assertFalse(SafeRedirect.isSafe("/login/"));
+        assertFalse(SafeRedirect.isSafe("/error/403/"));
+        // 合法页面的尾斜杠不受影响
+        assertTrue(SafeRedirect.isSafe("/front/chat_test/"));
+        assertTrue(SafeRedirect.isSafe("/front/profile/"));
+    }
+
+    @Test
+    @DisplayName("dot segments that the browser would resolve are rejected")
+    void dotSegmentsAreRejected() {
+        assertFalse(SafeRedirect.isSafe("/front/login/.."));
+        assertFalse(SafeRedirect.isSafe("/front/./login"));
+        assertFalse(SafeRedirect.isSafe("/front/chat_test/../login"));
+        assertFalse(SafeRedirect.isSafe("/front/%2e%2e/login"));
+        assertFalse(SafeRedirect.isSafe("/front/profile/."));
+        // 文件名里的点不受影响
+        assertTrue(SafeRedirect.isSafe("/front/chat_test.js"));
+    }
+
+    @Test
+    @DisplayName("static normalize() lower-cases and strips trailing slashes")
+    void normalizeHelper() {
+        assertEquals("/front/login", SafeRedirect.normalize("/Front/Login/"));
+        assertEquals("/", SafeRedirect.normalize("/"));
+        assertEquals("/front/chat_test", SafeRedirect.normalize("/front/chat_test///"));
+    }
 }

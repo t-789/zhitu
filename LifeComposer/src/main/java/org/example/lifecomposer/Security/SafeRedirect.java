@@ -13,8 +13,9 @@ import java.util.Locale;
  * <ul>
  *   <li>必须以单个 {@code /} 开头：挡掉绝对 URL、协议相对 URL、相对路径；</li>
  *   <li>不允许反斜杠（浏览器会把 {@code \} 当 {@code /}）；</li>
- *   <li>路径部分不允许 {@code //} 与 {@code %2f}/{@code %5c}（编码后的绕过）；</li>
+ *   <li>路径部分不允许 {@code //} 与 {@code %2f}/{@code %5c}/{@code %2e}（编码后的绕过）；</li>
  *   <li>不允许控制字符（CR/LF 头注入）；</li>
+ *   <li>路径按"大小写不敏感 + 去尾斜杠"归一化后判黑名单，{@code /Front/Login/} 这种换个写法绕不过去；</li>
  *   <li>不放行登录页、注册页、管理登录页（跳回去等于死循环）与 {@code /api/} 接口。</li>
  * </ul>
  *
@@ -64,11 +65,30 @@ public final class SafeRedirect {
             return false;
         }
 
-        String path = pathOf(value).toLowerCase(Locale.ROOT);
-        if (path.contains("//") || path.contains("%2f") || path.contains("%5c")) {
+        String path = normalize(pathOf(value));
+        if (path.contains("//") || path.contains("%2f") || path.contains("%5c") || path.contains("%2e")
+                || path.contains("/./") || path.contains("/../")
+                || path.endsWith("/.") || path.endsWith("/..")) {
             return false;
         }
         return !FORBIDDEN_PATHS.contains(path) && !path.startsWith("/api/");
+    }
+
+    /**
+     * 归一化路径，让"换个写法"绕不过黑名单：
+     * <ul>
+     *   <li>大小写：{@code /Front/Login} 与 {@code /front/login} 是同一个页面；</li>
+     *   <li>尾斜杠：{@code /front/login/}、{@code /front/login///} 同样指回登录页，
+     *       Spring 与浏览器都按同一路由处理，只比字符串就会漏；</li>
+     *   <li>末尾的点段由调用方单独拒绝（见 {@code isSafe} 里的 {@code /./}、{@code /../}）。</li>
+     * </ul>
+     */
+    static String normalize(String path) {
+        String value = path.toLowerCase(Locale.ROOT);
+        while (value.length() > 1 && value.endsWith("/")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        return value;
     }
 
     /** 去掉 query 与 fragment，只留路径部分。 */

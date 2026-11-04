@@ -16,10 +16,27 @@
 | 方法 | 路径 | 认证 | 说明 |
 |------|------|------|------|
 | POST | `/api/auth/register` | 无（**需 CSRF**） | body `{studentId, realName, email, password, confirmPassword}`；学号 4–20 位字母数字（同时作为 `username`）、姓名 2–50、邮箱格式、密码 8–50 位且含字母和数字、两次一致。成功 `data.userId`；校验失败 400；学号/邮箱已存在 409；每 IP 限流 429 |
-| POST | `/api/auth/login` | 无（**需 CSRF**） | body `{account, password}`，`account` 可为学号/用户名/邮箱。成功 `data`：`userId/username/realName/studentId/email/type/status/passwordChangeRequired/tempPasswordExpiresAt`。账号不存在与密码错误统一 `code=1001`（HTTP 401）；连续失败锁定 → 423（带 `Retry-After`）；封禁/临时密码过期 → 403 |
+| POST | `/api/auth/login` | 无（**需 CSRF**） | body `{account, password}`，`account` 可为学号/用户名/邮箱。成功 `data`：`userId/username/realName/studentId/email/type/status/passwordChangeRequired/tempPasswordExpiresAt`。账号不存在与密码错误统一 `code=1001`（HTTP 401）；**分层锁定**（见下）→ 423（带 `Retry-After`）；封禁/临时密码过期 → 403 |
 | POST | `/api/auth/logout` | 已登录（**需 CSRF**） | 销毁会话；无会话 401 信封 |
 | GET | `/api/auth/me` | 已登录 | 身份信息，**不含学院/专业/年级**（那些在 `/api/profiles/me`）；`status`：1 正常 / 0 封禁。未登录 401 信封 |
 | GET | `/api/auth/csrf` | 无 | `data`：`headerName`(`X-XSRF-TOKEN`)/`parameterName`/`token`，并下发 `XSRF-TOKEN` Cookie |
+
+#### 登录锁定与审计（v0.1.5）
+
+锁定分两层，两层都持久化在 `login_attempt` 表（进程重启不失效），键分别是 `(pair, 账号|IP)` 和 `(account, 账号)`：
+
+| 层 | 触发条件 | 默认锁定时长 | 配置键 | 说明 |
+|----|----------|--------------|--------|------|
+| 第一层 账号+IP | 同一账号在同一 IP 连续失败 5 次 | 15 分钟 | `app.security.login-max-failures` / `login-lock-millis` | 攻击者只能锁住自己那对组合，锁不住受害者在别处的登录 |
+| 第二层 账号总量 | 同一账号 1 小时内累计失败 30 次（不分 IP） | 30 分钟 | `app.security.login-total-window-minutes` / `login-total-failures-per-hour` / `login-total-lock-millis` | 分布式猜密码要换很多 IP 才会撞上；同时提高了用大量 IP 做 DoS 的门槛 |
+
+- **管理员豁免**：`users.type = 2` 的账号默认**只受第一层**约束（`app.security.login-admin-total-lock-enabled=false`），避免外网把管理员账号锁死；管理员登录仍应走 `/adminlogin` 与内网保护。
+- 把 `login-lock-millis` 或 `login-total-lock-millis` 配成 `0` 即**关闭该层锁定**（只计数不锁）。
+- 锁定中返回 423 + `Retry-After: <秒>`；已被锁定的记录不会因新的失败而**延长**（防止攻击者持续续锁）。
+- 每次登录尝试（成功与失败）都写 `login_log`：`account / user_id / ip_address / user_agent / status(1 成功, 0 失败) / failure_reason / created_at`。`account` 落库前经 `AuditSanitizer` 清洗——控制字符被剔除、不像账号的串（如误把密码填进账号框）存成 `<masked:xxxxxxxx>`，便于排查又不落明文。
+- 清理：`LoginCleanupJob` 每小时（`app.security.login-cleanup-cron`）删除过期锁定、`login-attempt-retention-days`(30) 天未动的计数行、`login-log-retention-days`(90) 天前的审计行。
+
+`/front/login` 与 `/front/register` 支持 `?redirect=<路径>`：只接受站内绝对路径，`SafeRedirect` 会拒绝 `//host`、反斜杠、`%2f/%5c/%2e`、`.`/`..` 段、尾斜杠与小写归一化后命中登录/注册/管理页的路径，非法值回落到 `/front/profile`。
 
 身份权威：`users`（含新增 `student_id`）是学号/用户名/邮箱/姓名/密码/角色/状态的唯一权威；`user_profiles` 是学院/专业/年级及画像的权威。账号有 `student_id` 时，`/api/profiles/me` 的 `studentId` 以 `users.student_id` 为准、忽略客户端提交值（`user_profiles.student_id` 仅为快照，已废弃）。
 
@@ -28,7 +45,7 @@
 | 方法 | 路径 | 认证 | 说明 |
 |------|------|------|------|
 | POST | `/api/users/register` | 无（**需 CSRF**） | 请求 `username`、`password`，可选 `email`（合法邮箱、≤100 字符）和 `realName`（≤50 字符）；新用户页用学号作为 `username` 且要求邮箱/姓名。旧客户端可不传；邮箱小写存储、大小写不敏感唯一，未做邮箱验证。成功/失败均返回**纯文本**（`注册成功` / `注册失败，用户名或邮箱可能已存在`）。每 IP 每分钟 10 次，超限 429 `REGISTER_RATE_LIMIT` |
-| POST | `/api/users/login` | 无（**需 CSRF**） | 请求中的 `username` 可为用户名/学号或已注册邮箱（3-100 字符）；登录并设置 session。返回 JSON：`message` / `username` / `type` / `passwordChangeRequired` / `tempPasswordExpiresAt`。密码错误返回 400 `BAD_CREDENTIALS`；账号被封禁返回 400 `LOGIN_REJECTED`；连续失败 5 次锁定 15 分钟并返回 429 `LOGIN_LOCKED`；临时密码过期返回 403 `TEMP_PASSWORD_EXPIRED`；`passwordChangeRequired=true` 时必须先访问 `/front/change-password` |
+| POST | `/api/users/login` | 无（**需 CSRF**） | 请求中的 `username` 可为用户名/学号或已注册邮箱（3-100 字符）；登录并设置 session。返回 JSON：`message` / `username` / `type` / `passwordChangeRequired` / `tempPasswordExpiresAt`。密码错误返回 400 `BAD_CREDENTIALS`；账号被封禁返回 400 `LOGIN_REJECTED`；连续失败 5 次锁定 15 分钟并返回 429 `LOGIN_LOCKED`（**遗留端点的锁状态码是 429，与 `/api/auth/login` 的 423 不同**，v1 删除该端点后统一为 423）；临时密码过期返回 403 `TEMP_PASSWORD_EXPIRED`；`passwordChangeRequired=true` 时必须先访问 `/front/change-password` |
 | POST | `/api/users/logout` | 已登录 | 登出，清除 session。返回纯文本 `登出成功` |
 | GET | `/api/users/current` | 已登录 | 获取当前用户信息（id/username/type/avatar/**isBanned**/banEndTime）。未登录由过滤器链拦截 → **403** |
 | GET | `/api/users/all` | ADMIN | 获取所有用户（不含密码哈希）。该端点字段名是 `banned`（与 `/current` 的 `isBanned` 不同） |

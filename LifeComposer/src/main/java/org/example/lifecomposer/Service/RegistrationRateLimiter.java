@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * </ul>
  *
  * <p>Keyed on the client address as seen by the application; behind a reverse proxy the
- * proxy address is the bucket, so the limit becomes global. See
- * {@code 对接信息说明.md} §9 for the deployment note.</p>
+ * proxy address is the bucket, so the limit becomes global. See {@code API_GUIDE.md}
+ * §2.10 (反向代理与客户端地址) for the deployment note.</p>
  */
 @Component
 public class RegistrationRateLimiter {
