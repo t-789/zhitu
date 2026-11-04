@@ -1,0 +1,2727 @@
+{
+  "_说明": {
+    "用途": "从 raw/ PDF 提取的加分规则，供后续导入 college_credit_rules 或人工复核。",
+    "维护者": "陆子粤",
+    "创建日期": "2026-06-14",
+    "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+    "提取方式": "扫描 PDF 页图人工识别",
+    "提取范围": "计算机学院正文通用分档、附件1中清晰可读的2026年竞赛加分条目、科研实践上限。",
+    "字段规则": [
+      "一个 PDF 源文件对应一个提取 JSON 文件，命名保持与 PDF 主文件名一致。",
+      "字段以 SCHEMA.md 的 college_credit_rules 表为准。",
+      "levels 为从 comp_level、竞赛名称和赛区推断出的资源阶段；A 级不能默认等于 national，判断不准时填空数组。",
+      "找不到明确分值时不编造；必要时只在 _notes 标注需要复核。",
+      "doc_source 填 raw/ 下的文件名。"
+    ]
+  },
+  "rules": [
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 0.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文通用分档；附件1列出2026年推荐免试研究生竞赛获奖加分列表。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际大学生创新大赛（金奖）-团队排名第一",
+      "award_tier": null,
+      "credits": 4.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际大学生创新大赛（金奖）-团队排名第二",
+      "award_tier": null,
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际大学生创新大赛（金奖）-团队排名第三",
+      "award_tier": null,
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际大学生创新大赛（金奖）-团队排名第四至第六",
+      "award_tier": null,
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生电子设计竞赛（国家级一等奖及以上）",
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "国家级一等奖及以上认定3分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "国际大学生程序设计竞赛（ICPC）世界总决赛",
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "国际大学生程序设计竞赛（ICPC）世界总决赛",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "国际大学生程序设计竞赛（ICPC）世界总决赛",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生数学建模竞赛（国家级一等奖及以上）",
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "国家级一等奖及以上认定3分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生机器人大赛（RoboCon）（国家级一等奖及以上）",
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "国家级一等奖及以上认定3分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”全国大学生课外学术科技作品竞赛（特等奖）",
+      "award_tier": "special",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际大学生创新大赛（银奖、铜奖）",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "银奖2.5分，铜奖2分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际大学生创新大赛（银奖、铜奖）",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "银奖2.5分，铜奖2分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生电子设计竞赛（含专项邀请赛）",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生电子设计竞赛（含专项邀请赛）",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "国际大学生程序设计竞赛（ICPC）亚洲区域赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "国际大学生程序设计竞赛（ICPC）亚洲区域赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "国际大学生程序设计竞赛（ICPC）亚洲区域赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生数学建模竞赛",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生数学建模竞赛",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生机器人大赛",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生机器人大赛",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”全国大学生课外学术科技作品竞赛（含专项赛）",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”全国大学生课外学术科技作品竞赛（含专项赛）",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”全国大学生课外学术科技作品竞赛（含专项赛）",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”中国大学生创业计划大赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”中国大学生创业计划大赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“挑战杯”中国大学生创业计划大赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生创新创业训练计划年会展示",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "获奖认定2.5分，成功入选认定2分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生创新创业训练计划年会展示",
+      "award_tier": "participation",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "获奖认定2.5分，成功入选认定2分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生工程实践与创新能力大赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生工程实践与创新能力大赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生工程实践与创新能力大赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生集成电路创新创业大赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生集成电路创新创业大赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生集成电路创新创业大赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生智能汽车竞赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生智能汽车竞赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生智能汽车竞赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生电子商务“创新、创意及创业”挑战赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生电子商务“创新、创意及创业”挑战赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生电子商务“创新、创意及创业”挑战赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生物理实验竞赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生物理实验竞赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生物理实验竞赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“外研社·国才杯”全国大学生英语系列赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "英语演讲/英语辩论/英语写作/英语阅读。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“外研社·国才杯”全国大学生英语系列赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "英语演讲/英语辩论/英语写作/英语阅读。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“外研社·国才杯”全国大学生英语系列赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "英语演讲/英语辩论/英语写作/英语阅读。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国机器人及人工智能大赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国机器人及人工智能大赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国机器人及人工智能大赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生创新方法应用大赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生创新方法应用大赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生创新方法应用大赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生数学竞赛决赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生数学竞赛决赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生数学竞赛决赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生嵌入式芯片与系统设计竞赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "含全国大学生FPGA创新设计竞赛。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生嵌入式芯片与系统设计竞赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "含全国大学生FPGA创新设计竞赛。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生嵌入式芯片与系统设计竞赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "含全国大学生FPGA创新设计竞赛。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生计算机设计大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生计算机设计大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生计算机设计大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国高校智能机器人创意大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国高校智能机器人创意大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国高校智能机器人创意大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国高校计算机大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "大数据挑战赛、团体程序设计天梯赛、移动应用创新赛、网络技术挑战赛、人工智能创意赛。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国高校计算机大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "大数据挑战赛、团体程序设计天梯赛、移动应用创新赛、网络技术挑战赛、人工智能创意赛。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国高校计算机大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "大数据挑战赛、团体程序设计天梯赛、移动应用创新赛、网络技术挑战赛、人工智能创意赛。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "大学生计算机系统与程序设计竞赛（CCSP）",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "大学生计算机系统与程序设计竞赛（CCSP）",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "大学生计算机系统与程序设计竞赛（CCSP）",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生软件创新大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生软件创新大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生软件创新大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国高校云计算应用创新大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国高校云计算应用创新大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国高校云计算应用创新大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "世界机器人大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "世界机器人大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "世界机器人大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生物联网设计大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生物联网设计大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生物联网设计大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生程序设计竞赛（CCPC）",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生程序设计竞赛（CCPC）",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生程序设计竞赛（CCPC）",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国机器人大赛暨RoboCup机器人世界杯中国赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国机器人大赛暨RoboCup机器人世界杯中国赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国机器人大赛暨RoboCup机器人世界杯中国赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生信息安全竞赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生信息安全竞赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生信息安全竞赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国三维数字化创新设计大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国三维数字化创新设计大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国三维数字化创新设计大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“中国软件杯”大学生软件设计大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“中国软件杯”大学生软件设计大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“中国软件杯”大学生软件设计大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "华为ICT大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "华为ICT大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "华为ICT大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "美国大学生数学建模竞赛（O奖）",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "O奖认定2分。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国工程机器人大赛暨国际公开赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国工程机器人大赛暨国际公开赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国工程机器人大赛暨国际公开赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生服务外包创新创业大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生服务外包创新创业大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国大学生服务外包创新创业大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "蓝桥杯全国软件和信息技术专业人才大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "蓝桥杯全国软件和信息技术专业人才大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "蓝桥杯全国软件和信息技术专业人才大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "睿抗机器人开发者大赛（RAICOM）",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "睿抗机器人开发者大赛（RAICOM）",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "睿抗机器人开发者大赛（RAICOM）",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国服务机器人大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国服务机器人大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国服务机器人大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "快递产业创新大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "曾用名全国“互联网+”快递业创新创业大赛。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "快递产业创新大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "曾用名全国“互联网+”快递业创新创业大赛。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "快递产业创新大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "曾用名全国“互联网+”快递业创新创业大赛。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“华为杯”中国大学生智能设计竞赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“华为杯”中国大学生智能设计竞赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "“华为杯”中国大学生智能设计竞赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生交通运输科技大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生交通运输科技大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生交通运输科技大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生英语竞赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生英语竞赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "全国大学生英语竞赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "3S杯全国大学生物联网技术与应用“三创”大赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "3S杯全国大学生物联网技术与应用“三创”大赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "3S杯全国大学生物联网技术与应用“三创”大赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛北京赛区",
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛北京赛区",
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛北京赛区",
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生电子设计竞赛",
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "含全国大学生电子设计竞赛北京赛区。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生电子设计竞赛",
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "含全国大学生电子设计竞赛北京赛区。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生电子设计竞赛",
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "含全国大学生电子设计竞赛北京赛区。"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "全国大学生电子设计竞赛北京赛区",
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "全国大学生电子设计竞赛北京赛区",
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "全国大学生电子设计竞赛北京赛区",
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "“挑战杯”首都大学生课外学术科技作品竞赛（含专项赛）",
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "“挑战杯”首都大学生课外学术科技作品竞赛（含专项赛）",
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "“挑战杯”首都大学生课外学术科技作品竞赛（含专项赛）",
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "“挑战杯”首都大学生创业计划大赛",
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "“挑战杯”首都大学生创业计划大赛",
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "“挑战杯”首都大学生创业计划大赛",
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生机器人大赛（同华北五省赛）",
+      "award_tier": "first",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生机器人大赛（同华北五省赛）",
+      "award_tier": "second",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生计算机应用大赛（同华北五省赛）",
+      "award_tier": "first",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "北京市大学生计算机应用大赛（同华北五省赛）",
+      "award_tier": "second",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf"
+    },
+    {
+      "college": "计算机学院（国家示范性软件学院）",
+      "credit_type": "recommendation",
+      "category": "paper",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "科研实践活动代表作评价",
+      "award_tier": null,
+      "credits": 3.0,
+      "category_cap": 3.0,
+      "team_formula": null,
+      "student_cohort": "2022级起",
+      "doc_source": "北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+      "_notes": "正文只明确科研实践个人最高加分认定上限为3分，未给出论文/专利细分分值。"
+    }
+  ]
+}

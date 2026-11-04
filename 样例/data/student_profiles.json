@@ -1,0 +1,32 @@
+[
+  {
+    "_说明": "虚构画像 1：大一萌新型 —— 有编程基础但没竞赛经验，想试试看",
+    "major": "计算机科学与技术",
+    "grade": "大一",
+    "skills": ["C语言", "Python基础"],
+    "interests": ["AI", "数据分析"],
+    "experiences": ["课程大作业"],
+    "available_time": "6 hours/week",
+    "goals": ["了解竞赛", "积累项目经历"]
+  },
+  {
+    "_说明": "虚构画像 2：大二进阶型 —— 有课程项目经验，想冲省奖",
+    "major": "软件工程",
+    "grade": "大二",
+    "skills": ["Java", "Python", "Git", "数据库基础"],
+    "interests": ["后端开发", "开源项目"],
+    "experiences": ["校级小程序开发比赛二等奖", "课程设计项目组长"],
+    "available_time": "10 hours/week",
+    "goals": ["参加竞赛", "获得省部级以上奖项"]
+  },
+  {
+    "_说明": "虚构画像 3：大二转专业型 —— 基础偏弱但目标明确，需要补短板",
+    "major": "电子信息工程",
+    "grade": "大二",
+    "skills": ["C语言"],
+    "interests": ["嵌入式", "算法竞赛"],
+    "experiences": ["电设课程实验"],
+    "available_time": "8 hours/week",
+    "goals": ["参加竞赛", "提升编程能力", "为保研加分"]
+  }
+]
