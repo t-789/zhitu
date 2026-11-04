@@ -142,14 +142,35 @@ class AuthControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("a banned account gets 403 on login")
+    @DisplayName("a banned account gets 403 on login, without leaking the unban time")
     void banned() throws Exception {
         register("20260009", "b@example.com");
         jdbcTemplate.update("UPDATE users SET is_banned = 1, ban_end_time = NULL WHERE username = '20260009'");
         mockMvc.perform(post("/api/auth/login").contentType("application/json")
                         .content("{\"account\":\"20260009\",\"password\":\"abc12345\"}"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value(403));
+                .andExpect(jsonPath("$.code").value(403))
+                .andExpect(jsonPath("$.message").value("账户已被封禁，请联系管理员"));
+    }
+
+    @Test
+    @DisplayName("a banned account with a wrong password is indistinguishable from a bad credential")
+    void bannedAccountWithWrongPasswordLooksLikeBadCredentials() throws Exception {
+        register("20260012", "b3@example.com");
+        jdbcTemplate.update("UPDATE users SET is_banned = 1, ban_end_time = NULL WHERE username = '20260012'");
+
+        mockMvc.perform(post("/api/auth/login").contentType("application/json")
+                        .content("{\"account\":\"20260012\",\"password\":\"wrong-pass-1\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(1001))
+                .andExpect(jsonPath("$.message").value("账号或密码错误"));
+
+        // The same answer as an account that does not exist at all.
+        mockMvc.perform(post("/api/auth/login").contentType("application/json")
+                        .content("{\"account\":\"20999999\",\"password\":\"wrong-pass-1\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(1001))
+                .andExpect(jsonPath("$.message").value("账号或密码错误"));
     }
 
     @Test
