@@ -1,0 +1,38 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            审查这个 PR，遵循仓库根目录 AGENTS.md 的规则，用中文评论。重点检查：
+            1. 访问 profile、credit activities、planning、chat 等私有数据时，是否从 SecurityContext 解析当前用户并检查所有权。
+            2. 是否有 API key、密码、Cookie、Session、真实用户信息或 data.db/.env 被写入代码、配置、测试、日志或文档。
+            3. Repository 是否使用 JdbcTemplate 手写 SQL 且无拼接注入；表初始化/迁移是否幂等。
+            4. 新增 Agent 工具是否登记白名单并保持只读；/api/chat/* 是否引入 fallback。
+            5. 前端动态内容是否使用 textContent，而不是把模型输出交给 innerHTML。
+            6. 修改接口、表或推荐行为时，是否同步更新了测试以及 API.md / SCHEMA.md。
+
+            只指出有把握的问题，并给出文件和行号；没有问题就简短说明通过。
+            用 inline comment 评论具体代码行，最后用一条 PR 评论给出总结。
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
