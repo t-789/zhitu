@@ -1,11 +1,16 @@
 package org.example.lifecomposer.controller;
 
+import org.example.lifecomposer.Service.LlmClientFactory;
+import org.example.lifecomposer.support.StubChatLlm;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -21,12 +26,21 @@ class ChatQuotaControllerTest extends BaseControllerTest {
     @org.springframework.beans.factory.annotation.Autowired
     private org.example.lifecomposer.Service.ChatConcurrencyGuard chatConcurrencyGuard;
 
+    @MockitoBean
+    private LlmClientFactory llmClientFactory;
+
+    /** Default: a healthy LLM, so an admitted request is really served and charged. */
+    @BeforeEach
+    void healthyLlm() {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.replying("ok"));
+    }
+
     @Test
     void minuteLimitRejectsThirdRequestWithinWindow() throws Exception {
         MockHttpSession session = registerAndLogin("quotauser1", "testpass123");
 
-        sendChat(session).andExpect(status().isServiceUnavailable());
-        sendChat(session).andExpect(status().isServiceUnavailable());
+        sendChat(session).andExpect(status().isOk());
+        sendChat(session).andExpect(status().isOk());
 
         mockMvc.perform(post("/api/chat/send")
                         .session(session)
@@ -45,9 +59,60 @@ class ChatQuotaControllerTest extends BaseControllerTest {
     void acceptedRequestCountsExactlyOnce() throws Exception {
         MockHttpSession session = registerAndLogin("quotauser2", "testpass123");
 
-        sendChat(session).andExpect(status().isServiceUnavailable());
+        sendChat(session).andExpect(status().isOk());
 
         assertEquals(1, usageCount(session));
+    }
+
+    @Test
+    void llmUnavailableDoesNotConsumeQuotaOrMinuteTokens() throws Exception {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.unavailable());
+        MockHttpSession session = registerAndLogin("quotauser6", "testpass123");
+
+        // chat-per-minute is 2: three failures in a row must all be 503, never 429.
+        for (int i = 0; i < 3; i++) {
+            sendChat(session).andExpect(status().isServiceUnavailable())
+                    .andExpect(jsonPath("$.error").value("LLM_UNAVAILABLE"));
+        }
+        assertEquals(0, usageCount(session), "服务端故障不应消耗每日额度");
+    }
+
+    @Test
+    void failedLlmResponseIsRefundedOnSend() throws Exception {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.failing());
+        MockHttpSession session = registerAndLogin("quotauser7", "testpass123");
+
+        sendChat(session).andExpect(status().isServiceUnavailable());
+
+        assertEquals(0, usageCount(session));
+    }
+
+    @Test
+    void llmUnavailableIsRefundedOnStream() throws Exception {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.unavailable());
+        MockHttpSession session = registerAndLogin("quotauser8", "testpass123");
+
+        mockMvc.perform(post("/api/chat/stream")
+                        .session(session)
+                        .header("User-Agent", "TestClient/1.0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"流式\"}"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted());
+        awaitChatSlotFree(session);
+
+        assertEquals(0, usageCount(session), "流式请求因 LLM 不可用失败时应退还额度");
+    }
+
+    @Test
+    void toolRoundLimitStillConsumesQuota() throws Exception {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.loopingToolCalls());
+        MockHttpSession session = registerAndLogin("quotauser9", "testpass123");
+
+        sendChat(session).andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error").value("MAX_TOOL_ROUNDS"));
+
+        assertEquals(1, usageCount(session), "工具轮数超限已产生模型调用，不退额度");
     }
 
     @Test
@@ -87,7 +152,7 @@ class ChatQuotaControllerTest extends BaseControllerTest {
     @Test
     void adminCanResetTodayQuotaAndNormalUserCannot() throws Exception {
         MockHttpSession userSession = registerAndLogin("quotauser4", "testpass123");
-        sendChat(userSession).andExpect(status().isServiceUnavailable());
+        sendChat(userSession).andExpect(status().isOk());
         int userId = jdbcTemplate.queryForObject(
                 "SELECT id FROM users WHERE username = ?", Integer.class, "quotauser4");
         assertEquals(1, usageCount(userId));

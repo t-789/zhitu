@@ -57,4 +57,20 @@ class ChatQuotaMidnightTest {
         assertEquals(1, chatUsageRepository.getCount(1, "2026-09-13"));
         assertEquals(1, chatUsageRepository.getCount(1, "2026-09-14"));
     }
+
+    @Test
+    void refundGoesBackToTheDayTheRequestWasCountedOn() {
+        // Admitted at 23:59 on the 13th ...
+        when(clock.instant()).thenReturn(Instant.parse("2026-09-13T15:59:00Z"));
+        ChatQuotaDecision admitted = chatQuotaService.tryConsume(2);
+        assertTrue(admitted.allowed());
+        assertEquals("2026-09-13", admitted.consumedDate());
+
+        // ... and the LLM failure is only noticed after midnight.
+        when(clock.instant()).thenReturn(Instant.parse("2026-09-13T16:01:00Z"));
+        chatQuotaService.refund(2, admitted);
+
+        assertEquals(0, chatUsageRepository.getCount(2, "2026-09-13"));
+        assertEquals(0, chatUsageRepository.getCount(2, "2026-09-14"));
+    }
 }

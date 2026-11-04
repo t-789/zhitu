@@ -65,7 +65,7 @@ public class ChatQuotaService {
         int usedAfter = usageRepository.getCount(userId, date);
         return new ChatQuotaDecision(true, null, null, 0L,
                 dailyLimit, usedAfter, Math.max(0, dailyLimit - usedAfter),
-                minuteLimit, Math.max(0, minuteLimit - 1));
+                minuteLimit, Math.max(0, minuteLimit - 1), date);
     }
 
     /**
@@ -75,6 +75,18 @@ public class ChatQuotaService {
      */
     public void refund(Integer userId) {
         usageRepository.decrement(userId, today());
+        minuteRateLimiter.refund(userId);
+    }
+
+    /**
+     * Refund an admitted request on the day it was actually counted, so a request
+     * that straddles midnight does not take a unit from the new day instead.
+     */
+    public void refund(Integer userId, ChatQuotaDecision admitted) {
+        String date = admitted != null && admitted.consumedDate() != null
+                ? admitted.consumedDate()
+                : today();
+        usageRepository.decrement(userId, date);
         minuteRateLimiter.refund(userId);
     }
 

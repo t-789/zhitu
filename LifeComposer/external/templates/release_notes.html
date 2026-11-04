@@ -198,6 +198,19 @@
       ============================================================
     -->
 
+    <!-- ========== Unreleased: LLM 可用性 ========== -->
+    <div class="container">
+        <h1>LLM 故障不再消耗额度，并增加请求重试</h1>
+
+        <div class="improvement-list">
+            <h3>用户可见变化</h3>
+            <ul>
+                <li><b>额度退还</b>：LLM 不可用（<code>LLM_UNAVAILABLE</code>）时，已准入的对话请求会退还当日额度和分钟令牌，不再因服务端故障被扣次数；工具轮数超限（<code>MAX_TOOL_ROUNDS</code>）仍计入。</li>
+                <li><b>自动重试</b>：连接失败或 HTTP 429/5xx 时，在收到任何内容之前最多重试 2 次（指数退避，上限 5 秒）；流式输出开始后不会重试，避免重复内容。可用 <code>maxRetries</code> / <code>retryBaseDelayMillis</code> 配置。</li>
+            </ul>
+        </div>
+    </div>
+
     <!-- ========== v0.1.9 ========== -->
     <div class="container">
         <h1>v0.1.9 — 登录安全模块：分层锁定、可信 IP、审计脱敏与部署说明</h1>

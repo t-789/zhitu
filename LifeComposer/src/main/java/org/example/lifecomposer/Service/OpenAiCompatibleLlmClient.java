@@ -22,11 +22,17 @@ import org.example.lifecomposer.dto.LlmToolDefinition;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,8 +48,18 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
     private static final String ERROR_CODE_UNAVAILABLE = "LLM_UNAVAILABLE";
 
     private final UseCaseConfig config;
+    private static final long MAX_BACKOFF_MILLIS = 5000L;
+    private static final Set<Integer> RETRYABLE_STATUS = Set.of(429, 500, 502, 503, 504);
+
+    /** Pauses between retry attempts; replaced in tests so they do not really sleep. */
+    @FunctionalInterface
+    interface Sleeper {
+        void sleep(long millis) throws InterruptedException;
+    }
+
     private final OkHttpClient httpClient;
     private final String apiKey;
+    private final Sleeper sleeper;
     private final Gson gson = new Gson();
 
     public OpenAiCompatibleLlmClient(UseCaseConfig config) {
@@ -54,12 +70,86 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
                 .readTimeout(config.getTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .writeTimeout(config.getTimeoutMillis(), TimeUnit.MILLISECONDS)
                 .build();
+        this.sleeper = Thread::sleep;
     }
 
     OpenAiCompatibleLlmClient(UseCaseConfig config, OkHttpClient client, String apiKey) {
+        this(config, client, apiKey, Thread::sleep);
+    }
+
+    OpenAiCompatibleLlmClient(UseCaseConfig config, OkHttpClient client, String apiKey, Sleeper sleeper) {
         this.config = config;
         this.apiKey = apiKey;
         this.httpClient = client;
+        this.sleeper = sleeper;
+    }
+
+    /**
+     * Sends the request, retrying connection failures and HTTP 429/5xx with
+     * exponential backoff. This only covers the phase before any body byte has
+     * been read, so a stream that already started is never replayed. Read
+     * timeouts are not retried: the provider may still be generating, and
+     * repeating would multiply the wait and the cost.
+     *
+     * @return the final response (successful, or the last failing one once the
+     *         attempts are used up; the caller owns and closes it)
+     */
+    private Response executeWithRetry(Request request) throws IOException {
+        int maxRetries = Math.max(0, config.getMaxRetries());
+        for (int attempt = 0; ; attempt++) {
+            long delay;
+            String reason;
+            try {
+                Response response = httpClient.newCall(request).execute();
+                int code = response.code();
+                if (attempt >= maxRetries || !RETRYABLE_STATUS.contains(code)) {
+                    return response;
+                }
+                delay = backoffMillis(attempt, response.header("Retry-After"));
+                reason = "HTTP " + code;
+                response.close();
+            } catch (IOException e) {
+                if (attempt >= maxRetries || !isRetryableNetworkError(e)) {
+                    throw e;
+                }
+                delay = backoffMillis(attempt, null);
+                reason = e.getClass().getSimpleName();
+            }
+            LOG.warn("LLM [{}] {} (model={}), retry {}/{} in {} ms",
+                    config.getProvider(), reason, config.getModel(), attempt + 1, maxRetries, delay);
+            try {
+                sleeper.sleep(delay);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new InterruptedIOException("interrupted while waiting to retry");
+            }
+        }
+    }
+
+    private long backoffMillis(int attempt, String retryAfterHeader) {
+        if (retryAfterHeader != null) {
+            try {
+                long seconds = Long.parseLong(retryAfterHeader.trim());
+                if (seconds >= 0) {
+                    return Math.min(seconds * 1000L, MAX_BACKOFF_MILLIS);
+                }
+            } catch (NumberFormatException ignored) {
+                // HTTP-date form or garbage: fall back to exponential backoff.
+            }
+        }
+        long base = Math.max(0, config.getRetryBaseDelayMillis());
+        return Math.min(base << Math.min(attempt, 10), MAX_BACKOFF_MILLIS);
+    }
+
+    private static boolean isRetryableNetworkError(IOException e) {
+        if (e instanceof ConnectException || e instanceof UnknownHostException
+                || e instanceof NoRouteToHostException) {
+            return true;
+        }
+        // Only a connect-phase timeout is safe to repeat; a read timeout is not.
+        return e instanceof SocketTimeoutException
+                && e.getMessage() != null
+                && e.getMessage().toLowerCase(Locale.ROOT).contains("connect");
     }
 
     private static String resolveApiKey(String envVarName) {
@@ -96,7 +186,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
             requestBuilder.header("Authorization", "Bearer " + apiKey);
         }
 
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+        try (Response response = executeWithRetry(requestBuilder.build())) {
             String body = response.body() != null ? response.body().string() : "";
             if (!response.isSuccessful()) {
                 String message = "HTTP " + response.code() + " from " + config.getBaseUrl()
@@ -170,7 +260,7 @@ public class OpenAiCompatibleLlmClient implements LlmClient {
             requestBuilder.header("Authorization", "Bearer " + apiKey);
         }
 
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+        try (Response response = executeWithRetry(requestBuilder.build())) {
             if (!response.isSuccessful()) {
                 String body = response.body() != null ? response.body().string() : "";
                 listener.onError(buildErrorResponse(ERROR_CODE_UNAVAILABLE,
