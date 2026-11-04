@@ -696,7 +696,7 @@ curl -s -b $JAR -X POST $BASE/api/users/logout -H "X-XSRF-TOKEN: $TOKEN" -H "Use
 | `403` | — | 未登录 / 缺 CSRF |
 | `409` | `{"error":"CHAT_IN_PROGRESS","message":"上一条消息还在处理中，请稍候"}` | 同一用户已有 AI 请求在处理（不扣额度） |
 | `429` | 见下方配额体 | 分钟或日额度用尽 |
-| `503` | `{"error":"LLM_UNAVAILABLE","message":"LLM 不可用，请稍后重试"}` | API key 缺失 / HTTP 非 2xx / 超时 / 格式错误（**已退还额度**） |
+| `503` | `{"error":"LLM_UNAVAILABLE","message":"LLM 不可用，请稍后重试"}` | API key 缺失 / HTTP 非 2xx / 超时 / 格式错误（尚未向用户输出任何内容时退还日额度，不退分钟令牌） |
 | `503` | `{"error":"MAX_TOOL_ROUNDS", ...}` | 工具调用超过 8 轮（不退额度） |
 
 **429 配额响应体**（响应头带 `Retry-After`）：
@@ -1314,7 +1314,7 @@ LLM 按用途分组配置（`qa` / `planning` / `profile` / `sql` / `chat`），
 | `CHAT_DAILY_LIMIT` | 429 | chat/send、chat/stream | 当日额度用尽 |
 | `CHAT_IN_PROGRESS` | 409 | chat/send、chat/stream | 同一用户已有 AI 请求在处理，不扣额度 |
 | `CHAT_SERVER_BUSY` | 503 | chat/stream | 全局流式并发已满，额度已退还 |
-| `LLM_UNAVAILABLE` | 503 / SSE error | chat/* | LLM 不可用（无 fallback）；服务端故障，已退还日额度与分钟令牌 |
+| `LLM_UNAVAILABLE` | 503 / SSE error | chat/* | LLM 不可用（无 fallback）；服务端故障；尚未向用户输出内容时退还日额度（不退分钟令牌，流式已开始输出后不退） |
 | `MAX_TOOL_ROUNDS` | 503 / SSE error | chat/* | 工具调用超过 8 轮 |
 | `INTERNAL_ERROR` | SSE error | chat/stream | 服务端异常 |
 | `ADMIN_RATE_LIMIT` | 429 | /api/admin/* | 管理查询超频 |

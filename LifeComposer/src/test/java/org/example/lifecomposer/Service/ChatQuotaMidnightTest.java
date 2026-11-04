@@ -68,7 +68,7 @@ class ChatQuotaMidnightTest {
 
         // ... and the LLM failure is only noticed after midnight.
         when(clock.instant()).thenReturn(Instant.parse("2026-09-13T16:01:00Z"));
-        chatQuotaService.refund(2, admitted);
+        chatQuotaService.refundDailyOnly(2, admitted);
 
         assertEquals(0, chatUsageRepository.getCount(2, "2026-09-13"));
         assertEquals(0, chatUsageRepository.getCount(2, "2026-09-14"));

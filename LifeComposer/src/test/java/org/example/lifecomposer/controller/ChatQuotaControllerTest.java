@@ -65,15 +65,18 @@ class ChatQuotaControllerTest extends BaseControllerTest {
     }
 
     @Test
-    void llmUnavailableDoesNotConsumeQuotaOrMinuteTokens() throws Exception {
+    void llmUnavailableRefundsDailyQuotaButKeepsMinuteThrottle() throws Exception {
         when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.unavailable());
         MockHttpSession session = registerAndLogin("quotauser6", "testpass123");
 
-        // chat-per-minute is 2: three failures in a row must all be 503, never 429.
-        for (int i = 0; i < 3; i++) {
-            sendChat(session).andExpect(status().isServiceUnavailable())
-                    .andExpect(jsonPath("$.error").value("LLM_UNAVAILABLE"));
-        }
+        // chat-per-minute is 2: the daily count is given back, but the minute token is
+        // not, so failures cannot be used to retry faster than the throttle allows.
+        sendChat(session).andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.error").value("LLM_UNAVAILABLE"));
+        sendChat(session).andExpect(status().isServiceUnavailable());
+        sendChat(session).andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value("CHAT_MINUTE_LIMIT"));
+
         assertEquals(0, usageCount(session), "服务端故障不应消耗每日额度");
     }
 
@@ -102,6 +105,23 @@ class ChatQuotaControllerTest extends BaseControllerTest {
         awaitChatSlotFree(session);
 
         assertEquals(0, usageCount(session), "流式请求因 LLM 不可用失败时应退还额度");
+    }
+
+    @Test
+    void streamFailureAfterOutputWasSentKeepsTheQuota() throws Exception {
+        when(llmClientFactory.getClient("chat")).thenReturn(StubChatLlm.streamsThenFails());
+        MockHttpSession session = registerAndLogin("quotauser10", "testpass123");
+
+        mockMvc.perform(post("/api/chat/stream")
+                        .session(session)
+                        .header("User-Agent", "TestClient/1.0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"流式\"}"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted());
+        awaitChatSlotFree(session);
+
+        assertEquals(1, usageCount(session), "用户已收到部分输出，失败不得退额度");
     }
 
     @Test

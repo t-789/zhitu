@@ -79,15 +79,29 @@ public class ChatQuotaService {
     }
 
     /**
-     * Refund an admitted request on the day it was actually counted, so a request
-     * that straddles midnight does not take a unit from the new day instead.
+     * Refund a request that never reached the model (daily count and minute token),
+     * on the day it was actually counted, so a request that straddles midnight does
+     * not take a unit from the new day instead.
      */
     public void refund(Integer userId, ChatQuotaDecision admitted) {
+        refundDaily(userId, admitted);
+        minuteRateLimiter.refund(userId);
+    }
+
+    /**
+     * Refund only the daily count after an LLM-side failure. The minute token stays
+     * consumed on purpose: if someone found a way to make the provider fail on
+     * demand, the per-minute throttle still bounds how fast they can retry.
+     */
+    public void refundDailyOnly(Integer userId, ChatQuotaDecision admitted) {
+        refundDaily(userId, admitted);
+    }
+
+    private void refundDaily(Integer userId, ChatQuotaDecision admitted) {
         String date = admitted != null && admitted.consumedDate() != null
                 ? admitted.consumedDate()
                 : today();
         usageRepository.decrement(userId, date);
-        minuteRateLimiter.refund(userId);
     }
 
     /** Admin operation: reset only the current Asia/Shanghai day. */

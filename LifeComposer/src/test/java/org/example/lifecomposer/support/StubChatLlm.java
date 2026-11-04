@@ -51,6 +51,25 @@ public final class StubChatLlm {
         };
     }
 
+    /** A client whose stream delivers some text and then breaks. */
+    public static LlmClient streamsThenFails() {
+        return new Stub(true) {
+            @Override
+            public LlmResponseDto chat(LlmRequestDto request) {
+                throw new IllegalStateException("streaming only");
+            }
+
+            @Override
+            public void chatStream(LlmRequestDto request, LlmStreamListener listener) {
+                listener.onContentDelta("partial ");
+                LlmResponseDto failure = new LlmResponseDto();
+                failure.setFailed(true);
+                failure.setErrorCode("LLM_UNAVAILABLE");
+                listener.onError(failure);
+            }
+        };
+    }
+
     /** A client that keeps asking for an unknown tool, so the round limit is hit. */
     public static LlmClient loopingToolCalls() {
         return new Stub(true) {

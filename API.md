@@ -120,7 +120,7 @@
 >
 > **v0.0.5 配额说明**：
 > - 每个已认证用户每分钟最多 5 次聊天，每天（Asia/Shanghai）最多 100 次；`/api/chat/send` 与 `/api/chat/stream` 每次请求只计一次。
-> - 被 429 拒绝的请求不扣减日额度。**LLM 不可用（503 `LLM_UNAVAILABLE`，含流内 `error` 事件）属于服务端故障，已准入的请求会退还日额度和分钟令牌**（按准入当日退还，跨零点不会误扣次日）；`MAX_TOOL_ROUNDS`（工具轮数超限）、SSE 中断和客户端断开仍保留用量，避免通过这些途径绕过限额。
+> - 被 429 拒绝的请求不扣减日额度。**LLM 不可用（503 `LLM_UNAVAILABLE`，含流内 `error` 事件）属于服务端故障，会退还当日额度**（按准入当日退还，跨零点不会误扣次日），但有两个限制以防被用来绕过限额：①**不退分钟令牌**，分钟限流照常生效；②流式请求一旦已向客户端发出过模型产出的事件（`thinking_start` / `token` / `tool_call` / `assistant_message`），后续失败**不再退还**。`MAX_TOOL_ROUNDS`（工具轮数超限）、SSE 中断和客户端断开同样保留用量。
 > - 服务端强制 `max_tokens=2048`（v0.1.2 起，原为 1024）；客户端传入更大的 `maxTokens` 会被截断。
 > - 管理员可用 `POST /api/users/admin/chat-quota/reset/{userId}` 重置当前自然日额度，并写入审计日志。
 >

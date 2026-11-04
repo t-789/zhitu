@@ -84,8 +84,10 @@ public class ChatController {
                     userId, request.getMessage(), effectiveMaxTokens(request.getMaxTokens()));
             return ResponseEntity.ok(response);
         } catch (LlmUnavailableException e) {
+            // /send delivers nothing before the final answer, so a failure here
+            // never leaves the user with partial output.
             if (e.isRefundable() && admitted != null) {
-                chatQuotaService.refund(userId, admitted);
+                chatQuotaService.refundDailyOnly(userId, admitted);
             }
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                     "error", e.getCode(),
@@ -162,9 +164,12 @@ public class ChatController {
                 releaseSlot.run();
                 emitter.completeWithError(e);
             } catch (LlmUnavailableException e) {
-                // The failure is on our side: give the quota back before the terminal event.
-                if (e.isRefundable()) {
-                    chatQuotaService.refund(userId, admitted);
+                // The failure is on our side: give the daily quota back before the terminal
+                // event, but only if the user received nothing from the model. Once any
+                // thinking/token/tool_call/answer event went out, the request was served
+                // (and billed) and stays counted, so a failure cannot be used to get free output.
+                if (e.isRefundable() && !listener.modelOutputSent()) {
+                    chatQuotaService.refundDailyOnly(userId, admitted);
                 }
                 releaseSlot.run();
                 completeWithErrorEvent(emitter, e.getCode(), "LLM 不可用，请稍后重试");
@@ -260,9 +265,15 @@ public class ChatController {
     private final class SseAgentEventListener implements AgentEventListener {
 
         private final SseEmitter emitter;
+        /** Set before the first event that carries model output is written. */
+        private volatile boolean modelOutputSent;
 
         private SseAgentEventListener(SseEmitter emitter) {
             this.emitter = emitter;
+        }
+
+        boolean modelOutputSent() {
+            return modelOutputSent;
         }
 
         @Override
@@ -272,6 +283,7 @@ public class ChatController {
 
         @Override
         public void onThinkingStart(Instant startedAt) {
+            modelOutputSent = true;
             send(emitter, "thinking_start", Map.of("startedAt", startedAt.toString()));
         }
 
@@ -287,6 +299,7 @@ public class ChatController {
 
         @Override
         public void onToolCall(String callId, String name, String description, String argumentsJson) {
+            modelOutputSent = true;
             send(emitter, "tool_call", Map.of(
                     "callId", callId,
                     "name", name,
@@ -305,11 +318,13 @@ public class ChatController {
 
         @Override
         public void onToken(String delta) {
+            modelOutputSent = true;
             send(emitter, "token", Map.of("delta", delta));
         }
 
         @Override
         public void onAssistantMessage(String content, String createTime) {
+            modelOutputSent = true;
             send(emitter, "assistant_message", Map.of(
                     "content", content,
                     "createTime", createTime));
