@@ -29,12 +29,12 @@ jobs:
         working-directory: LifeComposer
         run: |
           set +e
-          ./mvnw -B verify > ../mvn.log 2>&1
+          ./mvnw -B -ntp verify > ../mvn.log 2>&1
           code=$?
           echo "exit_code=$code" >> "$GITHUB_OUTPUT"
           {
             echo "summary<<EOF_SUMMARY"
-            tail -n 40 ../mvn.log
+            grep -E '^\[(INFO|ERROR|WARNING)\] (Tests run:|BUILD|Failures:|Errors:|Failed tests:|Tests in error:)|<<< (FAILURE|ERROR)' ../mvn.log | grep -v -- '-- in' | tail -n 30
             echo "EOF_SUMMARY"
           } >> "$GITHUB_OUTPUT"
           exit $code
@@ -47,7 +47,7 @@ jobs:
             PR NUMBER: ${{ github.event.pull_request.number }}
 
             CI 已在本 runner 上执行 `./mvnw -B verify`，退出码 ${{ steps.tests.outputs.exit_code }}（0 表示编译与测试全部通过）。
-            日志末尾 40 行：
+            测试摘要（日志中的 Tests run / BUILD / 失败项，最多 30 行）：
             ```
             ${{ steps.tests.outputs.summary }}
             ```
