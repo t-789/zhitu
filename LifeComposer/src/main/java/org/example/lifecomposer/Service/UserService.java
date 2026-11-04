@@ -40,6 +40,13 @@ public class UserService {
     private final AdminSecurityProperties adminSecurityProperties;
     private final AdminPasswordPolicy passwordPolicy;
 
+    /**
+     * A throw-away hash with exactly the configured strength, so a login attempt for an
+     * unknown account still pays one bcrypt comparison. Without it the response time
+     * itself would tell an attacker whether the account exists (anti-enumeration).
+     */
+    private final String timingDummyHash;
+
     public UserService(UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        AdminSecurityProperties adminSecurityProperties,
@@ -48,6 +55,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
         this.adminSecurityProperties = adminSecurityProperties;
         this.passwordPolicy = passwordPolicy;
+        this.timingDummyHash = passwordEncoder.encode(java.util.UUID.randomUUID().toString());
     }
 
     public boolean register(String username, String rawPassword) {
@@ -93,16 +101,31 @@ public class UserService {
         }
     }
 
+    /**
+     * Verifies credentials. Order matters for anti-enumeration: the password is checked
+     * <em>before</em> the ban state, so a banned account looks exactly like a wrong
+     * password unless the caller already knows the correct password. The rejection
+     * message never carries the unban timestamp.
+     *
+     * @return the authenticated user, or {@code null} for any credential failure
+     * @throws IllegalStateException only when the password is correct but the account is banned
+     */
     public User login(String username, String rawPassword) {
         User user = userRepository.findByAccount(username);
         if (user == null) {
+            // Pay the same bcrypt cost as a real comparison (timing side channel).
+            passwordEncoder.matches(rawPassword, timingDummyHash);
+            return null;
+        }
+
+        if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
             return null;
         }
 
         if (Boolean.TRUE.equals(user.getBanned())) {
             Timestamp banEndTime = user.getBanEndTime();
             if (banEndTime == null || banEndTime.after(Timestamp.from(Instant.now()))) {
-                throw new IllegalStateException("账户被封禁至" + (banEndTime == null ? "永久" : banEndTime));
+                throw new IllegalStateException("账户已被封禁，请联系管理员");
             }
             // Ban window is over, auto-unban for consistency.
             userRepository.updateBanStatus(user.getId(), false, null);
@@ -110,7 +133,7 @@ public class UserService {
             user.setBanEndTime(null);
         }
 
-        return passwordEncoder.matches(rawPassword, user.getPasswordHash()) ? user : null;
+        return user;
     }
 
     /** True when the stored temporary password has passed its deadline. */
