@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpSession;
 import org.example.lifecomposer.Entity.User;
 import org.example.lifecomposer.Repository.LoginLogRepository;
 import org.example.lifecomposer.Repository.UserRepository;
+import org.example.lifecomposer.Security.AuditSanitizer;
 import org.example.lifecomposer.Security.SessionCredential;
 import org.example.lifecomposer.config.AppSecurityProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -64,7 +65,9 @@ public class AuthLoginService {
         User existing = userRepository.findByAccount(account);
         // Lockout is shared by student id / username / email of the same account.
         String attemptKey = existing == null ? account.toLowerCase(Locale.ROOT) : existing.getUsername();
-        String auditName = existing == null && account.contains("@") ? "<email>" : attemptKey;
+        // 日志里只写"能认人"的形态：邮箱打码成 <email>，其余清洗掉控制字符防止日志注入。
+        String auditName = AuditSanitizer.forLog(
+                existing == null && account.contains("@") ? "<email>" : attemptKey);
         String clientIp = httpRequest == null ? "unknown" : httpRequest.getRemoteAddr();
         String userAgent = httpRequest == null ? null : httpRequest.getHeader("User-Agent");
         Integer knownUserId = existing == null ? null : existing.getId();
@@ -78,7 +81,7 @@ public class AuthLoginService {
         if (lockStatus.locked()) {
             long retryAfter = lockStatus.retryAfterSeconds();
             LOG.warn("AUDIT event=login_locked username={} ip={} scope={} retryAfterSeconds={}",
-                    auditName, clientIp, lockStatus.layer(), retryAfter);
+                    auditName, clientIp, scopeName(lockStatus.layer()), retryAfter);
             audit(knownUserId, account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,
                     "账号锁定中，剩余 " + minutes(retryAfter) + " 分钟");
             return new Result(Status.LOCKED, null, retryAfter, "登录失败次数过多，请稍后再试");
@@ -90,7 +93,7 @@ public class AuthLoginService {
                         loginAttemptService.recordFailure(attemptKey, clientIp, accountLevelLock);
                 int failures = outcome.failures();
                 LOG.warn("AUDIT event=login_failure username={} ip={} scope={} locked={}",
-                        auditName, clientIp, outcome.layer(), outcome.locked());
+                        auditName, clientIp, scopeName(outcome.layer()), outcome.locked());
                 String reason;
                 if (existing == null) {
                     reason = "账号不存在";
@@ -140,25 +143,36 @@ public class AuthLoginService {
         } catch (IllegalStateException e) {
             loginAttemptService.recordFailure(attemptKey, clientIp, accountLevelLock);
             LOG.warn("AUDIT event=login_failure username={} ip={} reason={}",
-                    auditName, clientIp, e.getMessage());
+                    auditName, clientIp, AuditSanitizer.forLog(e.getMessage()));
             audit(knownUserId, account, clientIp, userAgent, LoginLogRepository.STATUS_FAILURE,
                     banReason(e.getMessage()));
             return Result.of(Status.REJECTED, String.valueOf(e.getMessage()));
         }
     }
 
-    /** 审计写入；任何异常只记 warn，绝不影响登录主流程。 */
+    /** 日志里没有命中任何一层锁时 scope 显示 none，避免打出 {@code scope=null}。 */
+    private static String scopeName(LoginAttemptService.Layer layer) {
+        return layer == null ? "none" : layer.name().toLowerCase(java.util.Locale.ROOT);
+    }
+
+    /**
+     * 审计写入；任何异常只记 warn，绝不影响登录主流程。
+     *
+     * <p>{@code account} 在这里统一脱敏：像账号的值原样落库（运维要按账号查），
+     * 不像账号的值只留哈希前 8 位，避免"把密码填进账号框"变成明文审计记录。</p>
+     */
     private void audit(Integer userId,
                        String account,
                        String clientIp,
                        String userAgent,
                        int status,
                        String failureReason) {
+        String storedAccount = AuditSanitizer.accountForStorage(account);
         try {
-            loginLogRepository.insert(userId, account, clientIp, userAgent, status, failureReason);
+            loginLogRepository.insert(userId, storedAccount, clientIp, userAgent, status, failureReason);
         } catch (RuntimeException e) {
             LOG.warn("AUDIT event=login_log_write_failed account={} ip={} status={} error={}",
-                    account, clientIp, status, e.toString());
+                    storedAccount, clientIp, status, e.toString());
         }
     }
 
@@ -169,11 +183,11 @@ public class AuthLoginService {
         return Math.max(1L, (seconds + 59) / 60);
     }
 
-    /** 封禁原因归一为"账户被封禁"，不把解封时间写进审计原因。 */
+    /** 封禁原因归一为"账户被封禁"，不把解封时间写进审计原因；同样过一遍清洗。 */
     private static String banReason(String message) {
         if (message == null) {
             return "登录被拒绝";
         }
-        return message.contains("封禁") ? "账户被封禁" : message;
+        return AuditSanitizer.forLog(message.contains("封禁") ? "账户被封禁" : message);
     }
 }
