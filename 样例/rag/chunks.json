@@ -1,0 +1,302 @@
+[
+  {
+    "chunk_id": "rag_001",
+    "title": "数学建模竞赛参赛基本要求",
+    "text": "全国大学生数学建模竞赛面向全国高校在校生，三人一队，不限专业。竞赛题目一般来源于科学与工程技术、经济管理等领域经过简化的实际问题。参赛者需要具备数学建模、计算机编程和论文写作三项基本能力。竞赛不要求参赛者预先掌握高深的数学理论，但需要具备较强的自学能力和团队协作精神。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.mcm.edu.cn",
+    "page_or_section": "参赛须知",
+    "related_resource_id": "competition_001",
+    "created_at": "2026-06-06"
+  },
+  {
+    "chunk_id": "rag_002",
+    "title": "蓝桥杯大赛参赛要求与备赛建议",
+    "text": "第十七届蓝桥杯（2026年）面向研究生、本科生和高职高专学生，不限专业。软件赛设有C/C++、Java、Python、Web应用开发、软件测试、网络安全六个科目，均为个人赛。报名时间2025年10月20日至12月15日，省赛2026年4月举行。参赛费用300元/人。适合有编程语言基础的低年级本科生。备赛建议：先刷近三年真题熟悉题型和时间分配；重点练习基础算法（排序、查找、递归、动态规划）和数据结构（数组、链表、栈、队列、树、图）；建议提前2-3个月系统准备，每周练习5-8小时。晋级规则：省赛一等奖可晋级全国总决赛。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://jiaowu.nwpu.edu.cn/info/1164/25808.htm",
+    "page_or_section": "通知全文",
+    "related_resource_id": "competition_002",
+    "created_at": "2026-06-08"
+  },
+  {
+    "title": "信息与通信工程学院竞赛保研加分规则概览",
+    "text": "信息与通信工程学院学科竞赛加分规则（credit_type=recommendation，保研加分，适用于2023级起）。S 级竞赛最高加 4.0 分（如中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第一）。A+ 级竞赛最高加 2.5 分（如竞赛（按级别通用分档））。A 级竞赛最高加 2.0 分（如竞赛（按级别通用分档））。B+ 级竞赛最高加 1.5 分（如竞赛（按级别通用分档））。B 级竞赛最高加 1.0 分（如竞赛（按级别通用分档））。，类别累计上限 3.0 分。 不同学院标准有差异，评奖评优前应核对本学院原文。",
+    "source_type": "pdf",
+    "source_file": "raw/信通院创新实践活动加分办法_2023级起适用.pdf",
+    "source_url": "",
+    "page_or_section": "认定细则",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_003"
+  },
+  {
+    "title": "北京邮电大学竞赛加分规则概览（体育文艺类边界参考）",
+    "text": "体育类竞赛、文艺类实践活动按学校专门细则认定，不属于学科竞赛加分体系，学科竞赛推荐模块不处理这类规则，仅作边界提示。",
+    "source_type": "pdf",
+    "source_file": "raw/关于印发《北京邮电大学本科生参加体育类竞赛、文艺类实践活动认定实施细则（试行）》的通知.pdf",
+    "source_url": "",
+    "page_or_section": "体育/文艺认定边界",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_004"
+  },
+  {
+    "title": "北京邮电大学竞赛保研加分规则概览",
+    "text": "北京邮电大学学科竞赛加分规则（credit_type=recommendation，保研加分，适用于2020级起）。S 级竞赛最高加 4.0 分（如中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第一）。A+ 级竞赛最高加 2.5 分（如竞赛（按级别通用分档））。A 级竞赛最高加 2.0 分（如竞赛（按级别通用分档））。B+ 级竞赛最高加 1.5 分（如竞赛（按级别通用分档））。B 级竞赛最高加 1.0 分（如竞赛（按级别通用分档））。 不同学院标准有差异，评奖评优前应核对本学院原文。",
+    "source_type": "pdf",
+    "source_file": "raw/北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+    "source_url": "",
+    "page_or_section": "认定细则",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_005"
+  },
+  {
+    "title": "国际学院竞赛保研加分规则概览",
+    "text": "国际学院学科竞赛加分规则（credit_type=recommendation，保研加分，适用于2020级起）。S 级竞赛最高加 4.0 分（如中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第一）。A+ 级竞赛最高加 2.5 分（如竞赛（按级别通用分档））。A 级竞赛最高加 2.0 分（如竞赛（按级别通用分档））。B+ 级竞赛最高加 1.5 分（如竞赛（按级别通用分档））。B 级竞赛最高加 1.0 分（如竞赛（按级别通用分档））。 不同学院标准有差异，评奖评优前应核对本学院原文。",
+    "source_type": "pdf",
+    "source_file": "raw/北京邮电大学国际学院关于本科学生参加各类实践活动认定的实施细则.pdf",
+    "source_url": "",
+    "page_or_section": "认定细则",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_006"
+  },
+  {
+    "title": "计算机学院（国家示范性软件学院）竞赛保研加分规则概览",
+    "text": "计算机学院（国家示范性软件学院）学科竞赛加分规则（credit_type=recommendation，保研加分，适用于2022级起）。S 级竞赛最高加 4.0 分（如中国国际大学生创新大赛（金奖）-团队排名第一）。A+ 级竞赛最高加 2.5 分（如中国国际大学生创新大赛（银奖、铜奖））。A 级竞赛最高加 2.0 分（如全国大学生嵌入式芯片与系统设计竞赛）。B+ 级竞赛最高加 1.5 分（如中国国际“互联网+”大学生创新创业大赛北京赛区）。B 级竞赛最高加 1.0 分（如北京市大学生机器人大赛（同华北五省赛））。，类别累计上限 3.0 分。 不同学院标准有差异，评奖评优前应核对本学院原文。",
+    "source_type": "pdf",
+    "source_file": "raw/北京邮电大学计算机学院（国家示范性软件学院）关于本科学生参加各类实践活动认定的实施细则20250710.pdf",
+    "source_url": "",
+    "page_or_section": "认定细则",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_007"
+  },
+  {
+    "title": "电子工程学院竞赛保研加分规则概览",
+    "text": "电子工程学院学科竞赛加分规则（credit_type=recommendation，保研加分，适用于2020级起）。S 级竞赛最高加 4.0 分（如设有特等奖的竞赛-特等奖）。A+ 级竞赛最高加 2.5 分（如设有特等奖的竞赛-特等奖）。A 级竞赛最高加 2.0 分（如设有特等奖的竞赛-特等奖）。B+ 级竞赛最高加 1.5 分（如设有特等奖的竞赛-特等奖）。B 级竞赛最高加 1.0 分（如设有特等奖的竞赛-特等奖）。，类别累计上限 3.0 分。 不同学院标准有差异，评奖评优前应核对本学院原文。",
+    "source_type": "pdf",
+    "source_file": "raw/电子工程学院推荐免试研究生加分办法-盖章.pdf",
+    "source_url": "",
+    "page_or_section": "认定细则",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_008"
+  },
+  {
+    "title": "全国大学生数学建模竞赛参赛要求与加分概览",
+    "text": "全国大学生数学建模竞赛：竞赛级别 省级、国家级。赛制：三人一队，72小时集中参赛（2026年赛题9月10日发布），赛后按赛区评审省级奖（9月）；全国评审，设全国一等奖、二等奖。参赛难度中等，需要的能力标签：数学建模、编程基础、数据分析、文档写作、团队协作。队内分工：按 modeling_team 角色模板分工。计算机学院保研加分档位：国家级一等奖及以上 3.0 分；国家级二等奖（A+档） 2.5 分；三等奖（A+档） 2.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.mcm.edu.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_001",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_009"
+  },
+  {
+    "title": "蓝桥杯全国软件和信息技术专业人才大赛参赛要求与加分概览",
+    "text": "蓝桥杯全国软件和信息技术专业人才大赛：竞赛级别 省级、国家级。赛制：省赛（个人赛，程序设计/算法）（4月）；全国总决赛（6月）。参赛难度较低，需要的能力标签：编程基础、算法与数据结构。队内分工：按 solo 角色模板分工。计算机学院保研加分档位：北邮计算机学院参考：A 级竞赛。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://jiaowu.nwpu.edu.cn/info/1164/25808.htm",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_002",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_010"
+  },
+  {
+    "title": "ACM-ICPC 国际大学生程序设计竞赛参赛要求与加分概览",
+    "text": "ACM-ICPC 国际大学生程序设计竞赛：竞赛级别 regional、world_final。赛制：亚洲区域赛（EC 区等），三人一队，5 小时上机；世界总决赛。参赛难度较高，需要的能力标签：编程基础、算法与数据结构、英语阅读。队内分工：算法设计、代码实现、调试与测试。计算机学院保研加分档位：世界总决赛金牌 3.0 分；世界总决赛银牌 2.5 分；亚洲区域赛金牌 2.5 分；世界总决赛铜牌 2.0 分；亚洲区域赛银牌 2.0 分；亚洲区域赛铜牌 1.5 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://icpc.global",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_003",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_011"
+  },
+  {
+    "title": "中国大学生计算机设计大赛参赛要求与加分概览",
+    "text": "中国大学生计算机设计大赛：竞赛级别 校级、省级、国家级。赛制：校级初赛；省级复赛；全国总决赛。参赛难度中等，需要的能力标签：表达展示、团队协作、文档写作、项目经验。队内分工：按 innovation_team 角色模板分工。计算机学院保研加分档位：国家级一等奖 2.0 分；国家级二等奖 1.5 分；国家级三等奖 1.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.jsjds.com.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_004",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_012"
+  },
+  {
+    "title": "中国国际大学生创新大赛参赛要求与加分概览",
+    "text": "中国国际大学生创新大赛：竞赛级别 校级、省级、国家级。赛制：校级初赛（8-10月）；省级复赛（8-10月）；总决赛（5000 个项目入围）（11月）。参赛难度中等，需要的能力标签：表达展示、团队协作、文档写作、项目经验。队内分工：按 innovation_team 角色模板分工。计算机学院保研加分档位：全国金奖（团队排名第一） 4.0 分；全国金奖（团队排名第二） 3.0 分；全国金奖（团队排名第三） 2.5 分；全国银奖 2.5 分；全国金奖（团队排名第四至第六） 2.0 分；全国铜奖 2.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://cy.ncss.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_005",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_013"
+  },
+  {
+    "title": "\"挑战杯\"全国大学生课外学术科技作品竞赛参赛要求与加分概览",
+    "text": "\"挑战杯\"全国大学生课外学术科技作品竞赛：竞赛级别 校级、省级、国家级。赛制：校级选拔；省级评审；全国终审决赛。参赛难度较高，需要的能力标签：表达展示、团队协作、文档写作、项目经验。队内分工：按 innovation_team 角色模板分工。计算机学院保研加分档位：全国特等奖 3.0 分；全国一等奖 2.5 分；全国二等奖 2.0 分；全国三等奖 1.5 分；北京市一等奖（首都挑战杯） 1.5 分；北京市二等奖（首都挑战杯） 1.0 分；北京市三等奖（首都挑战杯） 0.5 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.tiaozhanbei.net",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_007",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_014"
+  },
+  {
+    "title": "全国大学生电子设计竞赛参赛要求与加分概览",
+    "text": "全国大学生电子设计竞赛：竞赛级别 省级、国家级。赛制：分赛区（省级）评审；全国竞赛（单数年举行，四天三夜半封闭式）；双数年设专题邀请赛（2026：瑞萨杯信息科技前沿、TI杯模拟、英特尔杯嵌入式AI）。参赛难度较高，需要的能力标签：编程基础、项目经验、团队协作。队内分工：按 hardware_team 角色模板分工。计算机学院保研加分档位：国家级一等奖及以上 3.0 分；国家级二等奖 2.5 分；国家级三等奖 2.0 分；北京赛区一等奖 1.5 分；北京赛区二等奖 1.0 分；北京赛区三等奖 0.5 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "http://nuedc.xjtu.edu.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_008",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_015"
+  },
+  {
+    "title": "中国高校计算机大赛参赛要求与加分概览",
+    "text": "中国高校计算机大赛：竞赛级别 校级、国家级。赛制：校内选拔（各校自行组织，天梯赛校内报名约 1-3 月）；全国统一比赛。含 5 大赛道：大数据挑战赛、团体程序设计天梯赛（2026 第十一届 4 月 18 日线上线下同时举行）、移动应用创新赛、网络技术挑战赛、人工智能创意赛。参赛难度中等，需要的能力标签：编程基础、算法与数据结构。队内分工：个人/团队（视赛道而定）。计算机学院保研加分档位：国家级一等奖 2.0 分；国家级二等奖 1.5 分；国家级三等奖 1.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "http://c4.cadcg.com.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_009",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_016"
+  },
+  {
+    "title": "全国大学生信息安全竞赛参赛要求与加分概览",
+    "text": "全国大学生信息安全竞赛：竞赛级别 国家级。赛制：多赛道：自由作品赛、命题挑战赛、创新实践能力赛（CTF）、创新赛；第十九届（2026）作品赛暨第三届『长城杯』网数智安全大赛（作品赛）于 2026 年 8 月举办（8月）。参赛难度较高，需要的能力标签：编程基础、算法与数据结构、团队协作。队内分工：攻击、防御、运维。计算机学院保研加分档位：国家级一等奖 2.0 分；国家级二等奖 1.5 分；国家级三等奖 1.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "http://www.ciscn.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_010",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_017"
+  },
+  {
+    "title": "\"中国软件杯\"大学生软件设计大赛参赛要求与加分概览",
+    "text": "\"中国软件杯\"大学生软件设计大赛：竞赛级别 省级、国家级。赛制：区域赛（A/B 组赛题作品评审；A 组面向普通高等教育组研究生、本科生，B 组面向职业教育组）；全国总决赛（现场答辩）（8月）。参赛难度中等，需要的能力标签：编程基础、数据分析、算法与数据结构、项目经验、文档写作。队内分工：按 dev_team 角色模板分工。计算机学院保研加分档位：国家级一等奖 2.0 分；国家级二等奖 1.5 分；国家级三等奖 1.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.cnsoftbei.com",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_011",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_018"
+  },
+  {
+    "title": "全国大学生软件创新大赛参赛要求与加分概览",
+    "text": "全国大学生软件创新大赛：竞赛级别 省级、国家级。赛制：六大区域赛（东北/华北/华东/华南/西北/西南），区域赛含初赛复赛决赛（2026-02 至 2026-04）；全国赛复赛 2026-04-21~04-30，总决赛时间以当年通知为准。参赛难度中等，需要的能力标签：编程基础、算法与数据结构、项目经验、表达展示。队内分工：按 dev_team 角色模板分工。计算机学院保研加分档位：国家级一等奖 2.0 分；国家级二等奖 1.5 分；国家级三等奖 1.0 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "http://www.swcontest.com.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_012",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_019"
+  },
+  {
+    "title": "全国大学生集成电路创新创业大赛参赛要求与加分概览",
+    "text": "全国大学生集成电路创新创业大赛：竞赛级别 省级、国家级。赛制：分赛区选拔（含校级选拔赛）；全国总决赛。参赛难度较高，需要的能力标签：编程基础、项目经验、团队协作。队内分工：按 hardware_team 角色模板分工。计算机学院保研加分档位：国家级一等奖 2.5 分；国家级二等奖 2.0 分；国家级三等奖 1.5 分。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://univ.icisc.com.cn",
+    "page_or_section": "resources.json 汇总",
+    "related_resource_id": "competition_013",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_020"
+  },
+  {
+    "title": "课程推荐：程序设计入门——C语言（浙江大学）",
+    "text": "课程《程序设计入门——C语言》由浙江大学开设。课程介绍：翁恺主讲（中文 MOOC 第一人，注册学生超 183 万），面向零基础学习者的程序设计入门课。配套教材《C语言程序设计(第4版)》何钦铭、颜晖著；提供在线编程环境 clin.icourse163.org。对计算机专业是专业基础第一阶梯，对非计算机专业帮助理解计算机能力边界。 学完可培养的能力标签：编程基础。无先修要求。课程页面：https://www.icourse163.org/course/ZJU-199001",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.icourse163.org/course/ZJU-199001",
+    "page_or_section": "resources.json 课程条目",
+    "related_resource_id": "course_001",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_021"
+  },
+  {
+    "title": "课程推荐：数据结构（浙江大学）",
+    "text": "课程《数据结构》由浙江大学开设。课程介绍：浙江大学陈越、何钦铭主讲的数据结构经典课程，配套 PTA 在线判题系统练习。内容覆盖树、图、哈希、排序等核心数据组织与算法思想，是算法类竞赛（蓝桥杯、ICPC、天梯赛）的基础课。 学完可培养的能力标签：算法与数据结构、编程基础。建议先修：编程基础。课程页面：https://www.icourse163.org/course/ZJU-93001",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.icourse163.org/course/ZJU-93001",
+    "page_or_section": "resources.json 课程条目",
+    "related_resource_id": "course_002",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_022"
+  },
+  {
+    "title": "课程推荐：走近数学——数学建模篇（全国大学生数学建模竞赛组织委员会）",
+    "text": "课程《走近数学——数学建模篇》由全国大学生数学建模竞赛组织委员会开设。课程介绍：全国大学生数学建模竞赛组委会官方开设的数学建模入门课，授课教师包括李大潜、陈叔平、谢金星、白峰杉、蔡志杰、邓明华。与 competition_001（全国大学生数学建模竞赛）直接联动，适合赛前了解建模流程与论文规范。 学完可培养的能力标签：数学建模。无先修要求。课程页面：https://www.icourse163.org/course/cumcm-1001674011",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.icourse163.org/course/cumcm-1001674011",
+    "page_or_section": "resources.json 课程条目",
+    "related_resource_id": "course_003",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_023"
+  },
+  {
+    "title": "课程推荐：数学建模（厦门大学）",
+    "text": "课程《数学建模》由厦门大学开设。课程介绍：厦门大学谭忠主讲，国家精品资源共享课转型升级的 MOOC，也是厦门大学组织全国大学生数学建模竞赛和美国大学生数学建模竞赛的培训课程。从数学产生的源头问题出发引出建模问题与方法，涉及建模步骤与论文写作规范、初等分析方法和初等代数方法等。 学完可培养的能力标签：数学建模。无先修要求。课程页面：https://www.icourse163.org/course/XMU-1001556009",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.icourse163.org/course/XMU-1001556009",
+    "page_or_section": "resources.json 课程条目",
+    "related_resource_id": "course_004",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_024"
+  },
+  {
+    "title": "课程推荐：Python数据分析与展示（北京理工大学）",
+    "text": "课程《Python数据分析与展示》由北京理工大学开设。课程介绍：嵩天主讲，国家精品在线开放课程（2017 年首开）。4 周内容讲解 Python 计算生态中最优秀的数据分析和展示技术：NumPy（N 维数据表达）、Matplotlib（图形展示）、Pandas（数据统计与分析），帮助学习者掌握表示、清洗、统计和展示数据的能力。 学完可培养的能力标签：数据分析。建议先修：编程基础。课程页面：https://www.icourse163.org/course/BIT-1001870002",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "https://www.icourse163.org/course/BIT-1001870002",
+    "page_or_section": "resources.json 课程条目",
+    "related_resource_id": "course_005",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_025"
+  },
+  {
+    "title": "课程推荐：程序设计基础（北邮计算机类大一必修）（北京邮电大学）",
+    "text": "课程《程序设计基础（北邮计算机类大一必修）》由北京邮电大学开设。课程介绍：北京邮电大学计算机类（计算机学院/网络空间安全学院等）大一程序设计类必修课，讲授 C/C++ 基础语法与程序设计方法，是校内程序设计能力的起点，也是蓝桥杯等入门竞赛的基础。课名与大纲以教务系统/培养方案为准。 学完可培养的能力标签：编程基础。无先修要求。",
+    "source_type": "web",
+    "source_file": "",
+    "source_url": "",
+    "page_or_section": "resources.json 课程条目",
+    "related_resource_id": "course_006",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_026"
+  },
+  {
+    "title": "能力标签体系总览",
+    "text": "本系统用 10 个标准能力标签描述学生画像与竞赛/课程要求：技术能力类：编程基础、算法与数据结构、数学建模、数据分析、AI 工具应用；通用能力类：文档写作、表达展示、团队协作、项目经验、英语阅读。学生自填技能（如'会 Python'）通过 skill_mapping 别名表映射到标准标签后再做匹配。",
+    "source_type": "json",
+    "source_file": "draft/capability-tags.json",
+    "source_url": "",
+    "page_or_section": "tags",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_027"
+  },
+  {
+    "title": "能力等级 L1/L2/L3 的含义与用法",
+    "text": "每个能力标签分三级：L1（入门）如「」；L2（能独立完成课程/小型任务）；L3（熟练）如「」。推荐模块用学生当前等级对比竞赛要求的等级，得出能力差距，并推荐能补齐差距的课程或任务。",
+    "source_type": "json",
+    "source_file": "draft/capability-tags.json",
+    "source_url": "",
+    "page_or_section": "levels",
+    "created_at": "2026-09-05",
+    "chunk_id": "rag_028"
+  }
+]

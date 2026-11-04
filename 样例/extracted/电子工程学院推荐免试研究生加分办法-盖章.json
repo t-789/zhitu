@@ -1,0 +1,742 @@
+{
+  "_说明": {
+    "用途": "从 raw/ PDF 提取的加分规则，供后续导入 college_credit_rules 或人工复核。",
+    "维护者": "陆子粤",
+    "创建日期": "2026-06-14",
+    "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+    "提取方式": "pdfplumber 文本抽取后人工结构化",
+    "提取范围": "电子工程学院竞赛分档、设特等奖时的括号分值、科研论文和发明专利分值。",
+    "字段规则": [
+      "一个 PDF 源文件对应一个提取 JSON 文件，命名保持与 PDF 主文件名一致。",
+      "字段以 SCHEMA.md 的 college_credit_rules 表为准。",
+      "levels 为从 comp_level、竞赛名称和赛区推断出的资源阶段；A 级不能默认等于 national，判断不准时填空数组。",
+      "找不到明确分值时不编造；必要时只在 _notes 标注需要复核。",
+      "doc_source 填 raw/ 下的文件名。"
+    ]
+  },
+  "rules": [
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 0.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "学术类竞赛通用分档；若竞赛设特等奖，按文件表格中括号规则下调一等奖至三等奖。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛-特等奖",
+      "award_tier": "special",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖的竞赛按中括号内加分认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛-特等奖",
+      "award_tier": "special",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖的竞赛按中括号内加分认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "设有特等奖的竞赛-特等奖",
+      "award_tier": "special",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖的竞赛按中括号内加分认定。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛-特等奖",
+      "award_tier": "special",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖的竞赛按中括号内加分认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "first",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "second",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "third",
+      "credits": 0.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛-特等奖",
+      "award_tier": "special",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖的竞赛按中括号内加分认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "first",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "second",
+      "credits": 0.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "设有特等奖的竞赛",
+      "award_tier": "third",
+      "credits": 0.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "电子工程学院表格：设有特等奖时一等奖、二等奖、三等奖按中括号内分值认定。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第一",
+      "award_tier": null,
+      "credits": 4.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第二",
+      "award_tier": null,
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第三",
+      "award_tier": null,
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第四至第六",
+      "award_tier": null,
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "paper",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "SCI或SSCI检索正刊学术论文",
+      "award_tier": null,
+      "credits": 3.0,
+      "category_cap": 3.0,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "科研实践活动个人多项成果最高加分认定上限为3分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "paper",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "EI或CSCD检索正刊学术论文",
+      "award_tier": null,
+      "credits": 2.0,
+      "category_cap": 3.0,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "科研实践活动个人多项成果最高加分认定上限为3分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "paper",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "北大中文核心期刊正刊学术论文",
+      "award_tier": null,
+      "credits": 1.0,
+      "category_cap": 3.0,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "科研实践活动个人多项成果最高加分认定上限为3分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "paper",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "EI或CPCI-S或CPCI-SSH检索会议论文",
+      "award_tier": null,
+      "credits": 0.5,
+      "category_cap": 3.0,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf",
+      "_notes": "科研实践活动个人多项成果最高加分认定上限为3分。"
+    },
+    {
+      "college": "电子工程学院",
+      "credit_type": "recommendation",
+      "category": "patent",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "国家发明专利授权证书",
+      "award_tier": null,
+      "credits": 2.0,
+      "category_cap": 3.0,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "电子工程学院推荐免试研究生加分办法-盖章.pdf"
+    }
+  ]
+}

@@ -46,7 +46,7 @@
 - **登录安全模块（v0.1.3 起归王钰博维护，以 PR 修改）**：`Controller/AuthController.java`、`Service/AuthLoginService.java`、`Service/LoginAttemptService.java`、`Service/RegistrationRateLimiter.java`、`Security/` 下全部文件、`UserRepository`/`UserService` 中的认证与账号状态（封禁、锁定、临时密码、`credential_version`）部分、`dto/AuthRegisterRequest.java`、`dto/ApiEnvelope.java`、`external/templates/zhitu_auth.html`、`login.html`、`change_password.html`。其余人修改这些文件需先在 PR/Issue 里说明。管理控制台的封禁按钮界面仍归控制台，但调用同一个 Service，不另写封禁逻辑。
 - 不复制 `zhitu-auth` 的 JPA/Spring Boot 3 代码：按它的接口契约（`docs` 见 `API.md`「账号中心」）在本仓库内用 `JdbcTemplate` 实现；单进程、同端口 18000、Session + CSRF，不共享会话库。
 - 登录/注册界面是 `/front/login`、`/front/register`（`zhitu_auth.html`，调用 `/api/auth/*`）；管理端入口 `/adminlogin`（`login.html`，仍用 `/api/users/login`）。保持 Session + CSRF。
-- 数据成员提交脱敏数据、字段字典和导入报告；不要提交 `data.db`。原始 `样例/` 目录目前是本地资料，协作数据应放到计划指定的可追踪目录。
+- 数据成员提交脱敏数据、字段字典和导入报告；不要提交 `data.db`。`样例/` 是已脱敏的虚构数据交付包，已纳入版本库，测试和 CI 依赖它；其中不得放真实用户信息。
 - 前端成员主要修改 `LifeComposer/external/templates/` 和 `LifeComposer/external/static/`。不要顺手修改 `Security/`（登录安全模块，见上）、Repository、数据库迁移或 API 响应格式。
 - 测试成员提交测试矩阵、脱敏夹具和缺陷复现步骤。发现接口缺口时记录缺口，不在测试分支临时复制一个 Controller。
 

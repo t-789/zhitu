@@ -1,0 +1,698 @@
+{
+  "_说明": {
+    "用途": "从 raw/ PDF 提取的加分规则，供后续导入 college_credit_rules 或人工复核。",
+    "维护者": "陆子粤",
+    "创建日期": "2026-06-14",
+    "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+    "提取方式": "扫描 PDF 页图人工识别",
+    "提取范围": "学校通用学术竞赛、体育、文艺、退伍复学等有明确分值的规则。",
+    "字段规则": [
+      "一个 PDF 源文件对应一个提取 JSON 文件，命名保持与 PDF 主文件名一致。",
+      "字段以 SCHEMA.md 的 college_credit_rules 表为准。",
+      "levels 为从 comp_level、竞赛名称和赛区推断出的资源阶段；A 级不能默认等于 national，判断不准时填空数组。",
+      "找不到明确分值时不编造；必要时只在 _notes 标注需要复核。",
+      "doc_source 填 raw/ 下的文件名。"
+    ]
+  },
+  "rules": [
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A+",
+      "levels": [
+        "national"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "A",
+      "levels": [],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。 levels 需人工核对：A级不能直接判断为 national 或 provincial。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B+",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "first",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "second",
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "B",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": null,
+      "award_tier": "third",
+      "credits": 0.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "学校通用学术类竞赛分档；学院具体加分不得高于学校上限。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第一",
+      "award_tier": null,
+      "credits": 4.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第二",
+      "award_tier": null,
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第三",
+      "award_tier": null,
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "competition",
+      "comp_level": "S",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "中国国际“互联网+”大学生创新创业大赛全国金奖-团队排名第四至第六",
+      "award_tier": null,
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "全国金奖团队排名规则；第六名之后不认定推免加分。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "体育类个人单项赛第一名",
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "体育类个人单项赛第二名",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "体育类个人单项赛第三名",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "体育类个人单项赛第四至第五名",
+      "award_tier": null,
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "体育类个人单项赛第六至第八名",
+      "award_tier": null,
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "体育类个人单项赛第一名",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "体育类个人单项赛第二名",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "体育类个人单项赛第三名",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "体育类个人单项赛第四至第八名",
+      "award_tier": null,
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "sports",
+      "comp_level": "school",
+      "levels": [
+        "school"
+      ],
+      "comp_name": "破校运动会记录",
+      "award_tier": null,
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": "团体赛按个人赛加分上限乘以人数区间系数；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则体育类规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "文艺类个人赛一等奖",
+      "award_tier": "first",
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": "团队赛按个人赛加分上限乘以人数区间系数，并按贡献递减分配；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则文艺类竞赛规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "文艺类个人赛二等奖",
+      "award_tier": "second",
+      "credits": 2.5,
+      "category_cap": null,
+      "team_formula": "团队赛按个人赛加分上限乘以人数区间系数，并按贡献递减分配；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则文艺类竞赛规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": "national",
+      "levels": [
+        "national"
+      ],
+      "comp_name": "文艺类个人赛三等奖",
+      "award_tier": "third",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": "团队赛按个人赛加分上限乘以人数区间系数，并按贡献递减分配；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则文艺类竞赛规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "文艺类个人赛一等奖",
+      "award_tier": "first",
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": "团队赛按个人赛加分上限乘以人数区间系数，并按贡献递减分配；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则文艺类竞赛规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "文艺类个人赛二等奖",
+      "award_tier": "second",
+      "credits": 1.5,
+      "category_cap": null,
+      "team_formula": "团队赛按个人赛加分上限乘以人数区间系数，并按贡献递减分配；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则文艺类竞赛规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": "provincial",
+      "levels": [
+        "provincial"
+      ],
+      "comp_name": "文艺类个人赛三等奖",
+      "award_tier": "third",
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": "团队赛按个人赛加分上限乘以人数区间系数，并按贡献递减分配；每名学生最高不超过对应个人上限。",
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "校级总则文艺类竞赛规则。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "重大文艺作品创作及演出-主创或主演",
+      "award_tier": null,
+      "credits": 0.5,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "重大文艺作品创作及演出由学校推免工作领导小组认定。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "arts",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "重大文艺作品创作及演出-次创或参演",
+      "award_tier": null,
+      "credits": 0.2,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "重大文艺作品创作及演出由学校推免工作领导小组认定。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "veteran",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "退伍复学A级",
+      "award_tier": null,
+      "credits": 4.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "服役期满正常退伍，荣立三等功或荣获2次优秀士兵/四有优秀士兵/嘉奖。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "veteran",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "退伍复学B级",
+      "award_tier": null,
+      "credits": 3.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "服役期满正常退伍，荣获1次优秀士兵/四有优秀士兵。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "veteran",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "退伍复学C级",
+      "award_tier": null,
+      "credits": 2.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "服役期满正常退伍，荣获1次嘉奖。"
+    },
+    {
+      "college": "北京邮电大学",
+      "credit_type": "recommendation",
+      "category": "veteran",
+      "comp_level": null,
+      "levels": [],
+      "comp_name": "退伍复学D级",
+      "award_tier": null,
+      "credits": 1.0,
+      "category_cap": null,
+      "team_formula": null,
+      "student_cohort": "2020级起",
+      "doc_source": "北京邮电大学关于本科学生参加各类实践活动认定的实施细则.pdf",
+      "_notes": "服役期满正常退伍。"
+    }
+  ]
+}

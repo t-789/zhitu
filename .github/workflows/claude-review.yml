@@ -17,12 +17,41 @@ jobs:
         with:
           fetch-depth: 1
 
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run tests (result is handed to the reviewer)
+        id: tests
+        continue-on-error: true
+        working-directory: LifeComposer
+        run: |
+          set +e
+          ./mvnw -B -ntp verify > ../mvn.log 2>&1
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          {
+            echo "summary<<EOF_SUMMARY"
+            grep -E '^\[(INFO|ERROR|WARNING)\] (Tests run:|BUILD|Failures:|Errors:|Failed tests:|Tests in error:)|<<< (FAILURE|ERROR)' ../mvn.log | grep -v -- '-- in' | tail -n 30
+            echo "EOF_SUMMARY"
+          } >> "$GITHUB_OUTPUT"
+          exit $code
+
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
+
+            CI 已在本 runner 上执行 `./mvnw -B verify`，退出码 ${{ steps.tests.outputs.exit_code }}（0 表示编译与测试全部通过）。
+            测试摘要（日志中的 Tests run / BUILD / 失败项，最多 30 行）：
+            ```
+            ${{ steps.tests.outputs.summary }}
+            ```
+            请在评论中引用这一结果，说明编译/测试是否通过；不要再声称“未运行测试”。
 
             审查这个 PR，遵循仓库根目录 AGENTS.md 的规则，用中文评论。重点检查：
             1. 访问 profile、credit activities、planning、chat 等私有数据时，是否从 SecurityContext 解析当前用户并检查所有权。
