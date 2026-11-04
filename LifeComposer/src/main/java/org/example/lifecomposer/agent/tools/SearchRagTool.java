@@ -8,6 +8,8 @@ import org.example.lifecomposer.agent.ToolResult;
 import org.example.lifecomposer.rag.RagHit;
 import org.example.lifecomposer.rag.RagSearchException;
 import org.example.lifecomposer.rag.RagSearchService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -18,6 +20,8 @@ import java.util.Map;
 /** Vector search over RAG chunks using the local Ollama embedding model. */
 @Component
 public class SearchRagTool implements AgentTool {
+
+    private static final Logger LOG = LogManager.getLogger(SearchRagTool.class);
 
     private final RagSearchService ragSearchService;
 
@@ -77,7 +81,9 @@ public class SearchRagTool implements AgentTool {
             }
             return ToolResult.ok(Map.of("count", items.size(), "items", items));
         } catch (RagSearchException e) {
-            return ToolResult.error("RAG_UNAVAILABLE", e.getMessage());
+            // The cause can name hosts/models; keep it in the log, not in the model context.
+            LOG.warn("search_rag unavailable: {}", e.getMessage());
+            return ToolResult.error("RAG_UNAVAILABLE", "知识库检索暂不可用");
         }
     }
 }

@@ -59,15 +59,22 @@ public class ToolRegistry {
                     arguments = new JsonObject();
                 }
             } catch (RuntimeException e) {
-                return ToolResult.error("INVALID_ARGUMENTS", "工具参数不是合法 JSON: " + e.getMessage());
+                LOG.warn("Tool {} received unparseable arguments: {}", name, e.getClass().getSimpleName());
+                return ToolResult.error("INVALID_ARGUMENTS", "工具参数不是合法的 JSON 对象");
             }
+        }
+        List<String> problems = ToolArgumentValidator.validate(tool.parameterSchema(), arguments);
+        if (!problems.isEmpty()) {
+            LOG.info("Tool {} rejected arguments: {}", name, problems);
+            return ToolResult.error("INVALID_ARGUMENTS", "参数不合法：" + String.join("；", problems));
         }
         try {
             ToolResult result = tool.execute(context, arguments);
             return result != null ? result : ToolResult.error("EMPTY_TOOL_RESULT", "工具没有返回结果");
         } catch (RuntimeException e) {
             LOG.error("Tool {} execution failed", name, e);
-            return ToolResult.error("TOOL_EXECUTION_ERROR", e.getMessage());
+            // Exception text may contain SQL, table names or paths: log it, never hand it to the model.
+            return ToolResult.error("TOOL_EXECUTION_ERROR", "工具执行失败，请换个问法或稍后再试");
         }
     }
 }
