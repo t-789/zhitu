@@ -441,7 +441,7 @@
         }
     </style>
 </head>
-<body>
+<body th:attr="data-login-redirect=${loginRedirect}">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
@@ -594,6 +594,18 @@
             }
         })();
 
+        // ===== 登录后落地页（服务端已用 SafeRedirect 校验，这里再兜一次底） =====
+        const BACKSLASH = String.fromCharCode(92);
+        const AFTER_LOGIN = (() => {
+            const body = document.body;
+            const raw = (body && body.dataset) ? (body.dataset.loginRedirect || '') : '';
+            const ok = typeof raw === 'string'
+                && raw.charAt(0) === '/'
+                && raw.charAt(1) !== '/'
+                && raw.indexOf(BACKSLASH) < 0;
+            return ok ? raw : '/front/profile';
+        })();
+
         // ===== 面板切换（无页面跳转，纯 CSS transform） =====
         const panels = document.getElementById('panels');
         const card = document.getElementById('card');
@@ -703,7 +715,7 @@
                     }
                     successToast.textContent = '登录成功，正在跳转...';
                     successToast.style.display = 'block';
-                    window.location.assign(data.type === 2 ? '/admin' : '/front/profile');
+                    window.location.assign(data.type === 2 ? '/admin' : AFTER_LOGIN);
                 } else {
                     loginErr.textContent = envelope.message || '登录失败，请重试';
                     loginErr.style.display = 'block';

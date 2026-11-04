@@ -1,8 +1,11 @@
 package org.example.lifecomposer.Controller;
 
+import org.example.lifecomposer.Security.SafeRedirect;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class HomeController {
@@ -17,8 +20,15 @@ public class HomeController {
         return "redirect:/front/login";
     }
 
+    /**
+     * Login/registration page. {@code ?redirect=} is validated here (see
+     * {@link SafeRedirect}) instead of in JavaScript, so the page only ever sees a
+     * value that is already known to be a same-site path.
+     */
     @GetMapping({"/front/login", "/front/register"})
-    public String userAuthentication() {
+    public String userAuthentication(
+            @RequestParam(name = "redirect", required = false) String redirect, Model model) {
+        model.addAttribute("loginRedirect", SafeRedirect.resolve(redirect, SafeRedirect.DEFAULT_AFTER_LOGIN));
         return "zhitu_auth";
     }
 
