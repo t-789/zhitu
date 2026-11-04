@@ -198,6 +198,21 @@
       ============================================================
     -->
 
+    <!-- ========== Unreleased: RAG 混合检索 ========== -->
+    <div class="container">
+        <h1>RAG 混合检索：向量 + 关键词，embedding 故障时仍可检索</h1>
+
+        <div class="improvement-list">
+            <h3>变化</h3>
+            <ul>
+                <li><b>专有名词更稳</b>：在向量检索之外增加关键词（BM25）召回，两路结果用 RRF 融合。“蓝桥杯”“综测”这类名称不再只靠小模型的语义相似度。汉字按相邻二字切分，两字词也能命中。</li>
+                <li><b>embedding 故障时降级</b>：Ollama 不可用时，只要关键词能命中仍返回结果；关键词也无命中则明确报告知识库检索不可用，而不是让模型误以为“没有相关资料”。</li>
+                <li><b>新增字段</b>：<code>search_rag</code> 的结果带 <code>matchedBy</code>（vector / keyword / both）和 <code>score</code>。</li>
+                <li><b>可关闭、可评测</b>：<code>rag.hybridEnabled=false</code> 恢复纯向量；新增离线评测 <code>RagEvalTest</code>，输出 Recall@5 与 MRR。</li>
+            </ul>
+        </div>
+    </div>
+
     <!-- ========== Unreleased: 当前用户与角色变更、RAG 向量缓存 ========== -->
     <div class="container">
         <h1>被撤销管理员权限的账号不再保留权限，当前用户信息实时读取</h1>

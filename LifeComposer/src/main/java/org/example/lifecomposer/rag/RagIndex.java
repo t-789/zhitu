@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.lifecomposer.Repository.RagChunkRepository.EmbeddingFingerprint;
 import org.example.lifecomposer.Repository.RagChunkRepository.EmbeddingRow;
+import org.example.lifecomposer.Repository.RagChunkRepository.KeywordRow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,17 +27,21 @@ final class RagIndex {
     }
 
     private final List<Entry> entries;
+    private final KeywordIndex keywords;
     private final EmbeddingFingerprint fingerprint;
     private final long builtAtMillis;
     private final AtomicBoolean modelMismatchLogged = new AtomicBoolean(false);
 
-    private RagIndex(List<Entry> entries, EmbeddingFingerprint fingerprint, long builtAtMillis) {
+    private RagIndex(List<Entry> entries, KeywordIndex keywords, EmbeddingFingerprint fingerprint,
+                     long builtAtMillis) {
         this.entries = List.copyOf(entries);
+        this.keywords = keywords;
         this.fingerprint = fingerprint;
         this.builtAtMillis = builtAtMillis;
     }
 
-    static RagIndex build(List<EmbeddingRow> rows, EmbeddingFingerprint fingerprint, long nowMillis) {
+    static RagIndex build(List<EmbeddingRow> rows, List<KeywordRow> keywordRows,
+                          EmbeddingFingerprint fingerprint, long nowMillis) {
         List<Entry> entries = new ArrayList<>(rows.size());
         int invalid = 0;
         int legacyWithoutModel = 0;
@@ -58,12 +63,16 @@ final class RagIndex {
             LOG.warn("RAG index: {} chunk(s) have no embedding_model recorded; they are compared by dimension only",
                     legacyWithoutModel);
         }
-        LOG.info("RAG index built: {} vector(s)", entries.size());
-        return new RagIndex(entries, fingerprint, nowMillis);
+        LOG.info("RAG index built: {} vector(s), {} chunk(s) for keyword search", entries.size(), keywordRows.size());
+        return new RagIndex(entries, KeywordIndex.build(keywordRows), fingerprint, nowMillis);
     }
 
     List<Entry> entries() {
         return entries;
+    }
+
+    KeywordIndex keywords() {
+        return keywords;
     }
 
     /** True while this snapshot still describes the database and is not older than {@code maxAgeMillis}. */

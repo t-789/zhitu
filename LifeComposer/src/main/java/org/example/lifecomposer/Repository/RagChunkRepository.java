@@ -56,8 +56,15 @@ public class RagChunkRepository {
     public record EmbeddingRow(String chunkId, String embeddingJson, String embeddingModel, Integer dimensions) {
     }
 
-    /** 判断向量集合是否变化：有向量的切片数量 + 其中最新的向量写入时间。 */
-    public record EmbeddingFingerprint(int count, String latestUpdate) {
+    /**
+     * 判断检索索引是否过期：有向量的切片数量、其中最新的向量写入时间、切片总数
+     * （关键词索引覆盖没有向量的切片，所以新增这类切片也要触发重建）。
+     */
+    public record EmbeddingFingerprint(int count, String latestUpdate, int totalChunks) {
+    }
+
+    /** 关键词索引需要的列。 */
+    public record KeywordRow(String chunkId, String title, String text) {
     }
 
     /** 有向量的切片的最小列；没有向量的切片不参与检索。 */
@@ -80,10 +87,20 @@ public class RagChunkRepository {
     /** 一条轻量聚合查询，供检索缓存判断是否需要重建（导入 CLI 是独立进程，无法主动通知）。 */
     public EmbeddingFingerprint embeddingFingerprint() {
         return jdbcTemplate.queryForObject("""
-                SELECT COUNT(*) AS cnt, MAX(embedding_updated_at) AS latest
+                SELECT COUNT(CASE WHEN embedding_json IS NOT NULL AND TRIM(embedding_json) != '' THEN 1 END) AS cnt,
+                       MAX(CASE WHEN embedding_json IS NOT NULL AND TRIM(embedding_json) != ''
+                                THEN embedding_updated_at END) AS latest,
+                       COUNT(*) AS total
                 FROM rag_chunks
-                WHERE embedding_json IS NOT NULL AND TRIM(embedding_json) != ''
-                """, (rs, rowNum) -> new EmbeddingFingerprint(rs.getInt("cnt"), rs.getString("latest")));
+                """, (rs, rowNum) -> new EmbeddingFingerprint(
+                rs.getInt("cnt"), rs.getString("latest"), rs.getInt("total")));
+    }
+
+    /** 全部切片的标题与正文（含没有向量的切片），用于构建关键词索引。 */
+    public List<KeywordRow> findKeywordRows() {
+        return jdbcTemplate.query(
+                "SELECT chunk_id, title, text FROM rag_chunks ORDER BY chunk_id",
+                (rs, rowNum) -> new KeywordRow(rs.getString("chunk_id"), rs.getString("title"), rs.getString("text")));
     }
 
     /** 按 chunk_id 批量取完整切片；已不存在的 id 不会出现在结果里。 */

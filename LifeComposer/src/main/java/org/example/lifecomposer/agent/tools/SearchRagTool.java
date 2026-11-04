@@ -36,7 +36,7 @@ public class SearchRagTool implements AgentTool {
 
     @Override
     public String description() {
-        return "对用户问题生成 embedding，并在本地 RAG 切片库中做余弦相似度检索，返回最相关的知识片段及来源。";
+        return "在本地知识库切片中检索与问题最相关的片段及来源：向量（语义）检索与关键词检索融合，能同时命中语义相近的表述和“蓝桥杯”“综测”这类专有名词。matchedBy 说明命中方式（vector/keyword/both）；similarity 为空表示该片段没有可比较的向量。";
     }
 
     @Override
@@ -77,6 +77,8 @@ public class SearchRagTool implements AgentTool {
                 item.put("pageOrSection", hit.pageOrSection());
                 item.put("relatedResourceId", hit.relatedResourceId());
                 item.put("similarity", hit.similarity());
+                item.put("score", hit.score());
+                item.put("matchedBy", hit.matchedBy());
                 items.add(item);
             }
             return ToolResult.ok(Map.of("count", items.size(), "items", items));

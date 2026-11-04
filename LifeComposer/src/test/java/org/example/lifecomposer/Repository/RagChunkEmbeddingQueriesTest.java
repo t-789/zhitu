@@ -54,6 +54,7 @@ class RagChunkEmbeddingQueriesTest {
         EmbeddingFingerprint empty = repository.embeddingFingerprint();
         assertEquals(0, empty.count());
         assertNull(empty.latestUpdate());
+        assertEquals(2, empty.totalChunks(), "chunks without a vector still count: keyword search covers them");
 
         repository.updateEmbedding("q_001", "[1.0]", "m1", 1, "SUCCESS", null, "2026-11-04T10:00:00.100Z");
         EmbeddingFingerprint one = repository.embeddingFingerprint();
@@ -80,6 +81,19 @@ class RagChunkEmbeddingQueriesTest {
         assertTrue(found.stream().anyMatch(c -> "资料一".equals(c.getTitle())));
         assertTrue(repository.findByChunkIds(List.of()).isEmpty());
         assertTrue(repository.findByChunkIds(null).isEmpty());
+    }
+
+    @Test
+    void keywordRowsCoverEveryChunkIncludingUnembeddedOnes() {
+        insert("q_001", "资料一");
+        insert("q_002", "资料二");
+        repository.updateEmbedding("q_001", "[1.0]", "m1", 1, "SUCCESS", null, "2026-11-04T10:00:00Z");
+
+        List<RagChunkRepository.KeywordRow> rows = repository.findKeywordRows();
+
+        assertEquals(List.of("q_001", "q_002"), rows.stream().map(RagChunkRepository.KeywordRow::chunkId).toList());
+        assertEquals("资料二", rows.get(1).title());
+        assertEquals("正文 q_002", rows.get(1).text());
     }
 
     private void insert(String id, String title) {

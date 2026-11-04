@@ -33,11 +33,17 @@ import java.util.function.LongSupplier;
  *
  * <p>Only chunks embedded by the same model as the query are compared: two models can
  * share a dimension and still produce meaningless similarities.</p>
+ *
+ * <p>With {@code rag.hybridEnabled} (default) the vector ranking is fused with a BM25
+ * keyword ranking, which finds exact names a small embedding model misses. If the
+ * embedding service is down, keyword results are still returned.</p>
  */
 @Service
 public class RagSearchService {
 
     private static final Logger LOG = LogManager.getLogger(RagSearchService.class);
+    /** Standard reciprocal-rank-fusion constant. */
+    private static final int RRF_K = 60;
 
     private final EmbeddingClient embeddingClient;
     private final RagChunkRepository ragChunkRepository;
@@ -73,17 +79,49 @@ public class RagSearchService {
         int topK = requestedTopK == null || requestedTopK <= 0
                 ? ragConfig.getDefaultTopK()
                 : Math.min(requestedTopK, ragConfig.getMaxTopK());
+        boolean hybrid = ragConfig.isHybridEnabled();
 
-        EmbeddingResult queryEmbedding;
+        EmbeddingResult queryEmbedding = null;
+        EmbeddingException embeddingFailure = null;
         try {
             queryEmbedding = embeddingClient.embed(query);
         } catch (EmbeddingException e) {
-            throw new RagSearchException("embedding unavailable: " + e.getMessage(), e);
+            if (!hybrid) {
+                throw new RagSearchException("embedding unavailable: " + e.getMessage(), e);
+            }
+            embeddingFailure = e;
         }
 
+        RagIndex snapshot = currentIndex();
+        Map<String, Double> similarities = new HashMap<>();
+        List<Scored> vectorRanking = queryEmbedding == null
+                ? List.of()
+                : rankByVector(snapshot, queryEmbedding, similarities);
+
+        if (!hybrid) {
+            return toHits(vectorRanking.stream().limit(topK)
+                    .map(s -> new Ranked(s.chunkId(), s.similarity(), s.similarity(), "vector")).toList());
+        }
+
+        int candidates = Math.max(ragConfig.getHybridCandidateK(), topK);
+        List<KeywordIndex.Match> keywordRanking = snapshot.keywords().search(query, candidates);
+        if (embeddingFailure != null) {
+            if (keywordRanking.isEmpty()) {
+                // Without vectors "no keyword match" proves nothing: report the outage
+                // instead of letting the model conclude the knowledge base has no answer.
+                throw new RagSearchException("embedding unavailable: " + embeddingFailure.getMessage(),
+                        embeddingFailure);
+            }
+            LOG.warn("RAG: embedding unavailable, answering from keyword search only");
+        }
+        return toHits(fuse(vectorRanking, keywordRanking, similarities, candidates).stream().limit(topK).toList());
+    }
+
+    /** Vector ranking above {@code minSimilarity}; records every comparable similarity for the fused result. */
+    private List<Scored> rankByVector(RagIndex snapshot, EmbeddingResult queryEmbedding,
+                                      Map<String, Double> similarities) {
         float[] queryVector = RagIndex.normalize(toDoubles(queryEmbedding.vector()));
         String queryModel = queryEmbedding.model();
-        RagIndex snapshot = currentIndex();
 
         List<Scored> scored = new ArrayList<>();
         int modelMismatch = 0;
@@ -96,35 +134,68 @@ public class RagSearchService {
                 continue;
             }
             double similarity = RagIndex.dot(queryVector, entry.vector());
-            if (similarity < ragConfig.getMinSimilarity()) {
-                continue;
+            similarities.put(entry.chunkId(), similarity);
+            if (similarity >= ragConfig.getMinSimilarity()) {
+                scored.add(new Scored(entry.chunkId(), similarity));
             }
-            scored.add(new Scored(entry.chunkId(), similarity));
         }
         if (modelMismatch > 0 && snapshot.markModelMismatchLogged()) {
             LOG.warn("RAG: ignoring {} chunk(s) embedded with a different model than the query ({}); "
                     + "re-run the import to re-embed them", modelMismatch, queryModel);
         }
-
         scored.sort(Comparator
                 .comparingDouble(Scored::similarity).reversed()
                 .thenComparing(Scored::chunkId));
-        List<Scored> top = scored.size() > topK ? scored.subList(0, topK) : scored;
-        return toHits(top);
+        return scored;
+    }
+
+    /**
+     * Reciprocal rank fusion: a chunk's score is the sum of 1 / (60 + rank) over the
+     * rankings it appears in. It needs no calibration between cosine similarity and
+     * BM25, which live on unrelated scales.
+     */
+    private List<Ranked> fuse(List<Scored> vectorRanking, List<KeywordIndex.Match> keywordRanking,
+                              Map<String, Double> similarities, int candidates) {
+        Map<String, Double> fused = new HashMap<>();
+        Map<String, Boolean> byVector = new HashMap<>();
+        Map<String, Boolean> byKeyword = new HashMap<>();
+        for (int i = 0; i < Math.min(candidates, vectorRanking.size()); i++) {
+            String id = vectorRanking.get(i).chunkId();
+            fused.merge(id, 1.0 / (RRF_K + i + 1), Double::sum);
+            byVector.put(id, true);
+        }
+        for (int i = 0; i < Math.min(candidates, keywordRanking.size()); i++) {
+            String id = keywordRanking.get(i).chunkId();
+            fused.merge(id, 1.0 / (RRF_K + i + 1), Double::sum);
+            byKeyword.put(id, true);
+        }
+        List<Ranked> ranked = new ArrayList<>(fused.size());
+        for (Map.Entry<String, Double> e : fused.entrySet()) {
+            String id = e.getKey();
+            String matchedBy = byVector.containsKey(id) && byKeyword.containsKey(id) ? "both"
+                    : byVector.containsKey(id) ? "vector" : "keyword";
+            ranked.add(new Ranked(id, similarities.get(id), e.getValue(), matchedBy));
+        }
+        ranked.sort(Comparator
+                .comparingDouble(Ranked::score).reversed()
+                .thenComparing(Comparator.comparing(Ranked::similarity,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .thenComparing(Ranked::chunkId));
+        return ranked;
     }
 
     /** Titles and text come from the database, so edits and deletions are always honoured. */
-    private List<RagHit> toHits(List<Scored> top) {
+    private List<RagHit> toHits(List<Ranked> top) {
         if (top.isEmpty()) {
             return List.of();
         }
         Map<String, RagChunk> byId = new HashMap<>();
-        for (RagChunk chunk : ragChunkRepository.findByChunkIds(top.stream().map(Scored::chunkId).toList())) {
+        for (RagChunk chunk : ragChunkRepository.findByChunkIds(top.stream().map(Ranked::chunkId).toList())) {
             byId.put(chunk.getChunkId(), chunk);
         }
         List<RagHit> hits = new ArrayList<>(top.size());
-        for (Scored s : top) {
-            RagChunk chunk = byId.get(s.chunkId());
+        for (Ranked r : top) {
+            RagChunk chunk = byId.get(r.chunkId());
             if (chunk == null) {
                 continue; // deleted since the index was built
             }
@@ -137,7 +208,9 @@ public class RagSearchService {
                     chunk.getSourceFile(),
                     chunk.getPageOrSection(),
                     chunk.getRelatedResourceId(),
-                    s.similarity()));
+                    r.similarity(),
+                    r.score(),
+                    r.matchedBy()));
         }
         return hits;
     }
@@ -156,7 +229,8 @@ public class RagSearchService {
             }
             // The fingerprint was read before the rows: if the data moves on in between,
             // the next search sees a different fingerprint and rebuilds again.
-            RagIndex rebuilt = RagIndex.build(ragChunkRepository.findEmbeddingRows(), latest, clock.getAsLong());
+            RagIndex rebuilt = RagIndex.build(ragChunkRepository.findEmbeddingRows(), ragChunkRepository.findKeywordRows(),
+                    latest, clock.getAsLong());
             index = rebuilt;
             return rebuilt;
         }
@@ -182,5 +256,9 @@ public class RagSearchService {
     }
 
     private record Scored(String chunkId, double similarity) {
+    }
+
+    /** A chunk on its way to becoming a hit; {@code similarity} is null when it has no comparable vector. */
+    private record Ranked(String chunkId, Double similarity, double score, String matchedBy) {
     }
 }

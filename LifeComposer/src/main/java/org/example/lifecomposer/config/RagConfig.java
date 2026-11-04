@@ -30,4 +30,14 @@ public class RagConfig {
      * how long a change the check could miss would stay invisible. 0 or less disables it.
      */
     private int indexMaxAgeSeconds = 300;
+
+    /**
+     * Combine vector search with keyword (BM25) recall via reciprocal rank fusion.
+     * Names such as "蓝桥杯" or "综测" are matched poorly by a small embedding model.
+     * false restores pure vector search.
+     */
+    private boolean hybridEnabled = true;
+
+    /** Candidates taken from each of the two rankings before fusion. */
+    private int hybridCandidateK = 20;
 }
