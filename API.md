@@ -337,6 +337,19 @@
 - CORS 允许来源通过 `app.security.allowed-origins` 显式配置，禁止使用 `*` 搭配 credentials；默认值为 `http://localhost:*`、`http://127.0.0.1:*`、`https://localhost:*`、`https://*.trycloudflare.com`（最后一项为调试用的 Cloudflare 临时隧道通配子域）。
 - 登录成功后重建 Session，防止 Session Fixation。
 
+## 响应安全头
+
+所有响应（页面、API、4xx/5xx）都带：
+
+| 头 | 值 | 作用 |
+|---|---|---|
+| `X-Frame-Options` | `SAMEORIGIN` | 只允许本站页面嵌入本站页面，防点击劫持（尤其是管理控制台的封禁/授权按钮） |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'` | 限制页面能加载/执行的来源；`frame-ancestors 'self'` 与上一行同义（新式写法） |
+
+- 页面只用到两个第三方来源：jsDelivr（对话页的 KaTeX，已加 SRI 完整性校验）和 Google Fonts（登录/注册页）。新增外部来源前先在 `WebSecurityConfig.CONTENT_SECURITY_POLICY` 里登记。
+- `script-src` 暂时带 `'unsafe-inline'`：模板里仍有内联 `<script>` 和 `onclick`。待前端把它们移到 `static/` 后应去掉，届时 CSP 才能拦住注入的内联脚本。
+- 对话页的 marked / DOMPurify 由本站 `/vendor/` 提供（`static/vendor/README.txt` 记录版本）。任何一个缺失时，助手消息按纯文本转义显示，不会把未消毒的 HTML 写进页面。
+
 ## 错误响应约定（v0.0.7 归属整理）
 
 > v0.0.7 整理异常的**处理归属**，除下列显式变化外不改变既有状态码或响应体格式；生产代码的状态码统一使用 `HttpStatus` 命名常量。
