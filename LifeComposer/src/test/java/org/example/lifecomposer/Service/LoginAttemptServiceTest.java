@@ -36,27 +36,40 @@ class LoginAttemptServiceTest {
         properties.setLoginLockMillis(60_000L);
         LoginAttemptService service = newService(properties);
 
-        assertFalse(service.isLocked("alice", "10.0.0.1"));
-        service.recordFailure("alice", "10.0.0.1");
-        assertFalse(service.isLocked("alice", "10.0.0.1"));
-        service.recordFailure("alice", "10.0.0.1");
-        assertTrue(service.isLocked("alice", "10.0.0.1"));
-        assertTrue(service.retryAfterSeconds("alice", "10.0.0.1") > 0);
+        assertFalse(service.isLocked("alice"));
+        service.recordFailure("alice");
+        assertFalse(service.isLocked("alice"));
+        service.recordFailure("alice");
+        assertTrue(service.isLocked("alice"));
+        assertTrue(service.retryAfterSeconds("alice") > 0);
 
-        service.recordSuccess("alice", "10.0.0.1");
-        assertFalse(service.isLocked("alice", "10.0.0.1"));
+        service.recordSuccess("alice");
+        assertFalse(service.isLocked("alice"));
     }
 
     @Test
-    void lockIsScopedByUsernameAndIp() {
+    @DisplayName("锁定只认账号：换 IP 不解锁，换账号互不影响")
+    void lockIsScopedByAccountOnly() {
         AppSecurityProperties properties = new AppSecurityProperties();
         properties.setLoginMaxFailures(1);
         LoginAttemptService service = newService(properties);
 
-        service.recordFailure("alice", "10.0.0.1");
-        assertTrue(service.isLocked("alice", "10.0.0.1"));
-        assertFalse(service.isLocked("alice", "10.0.0.2"));
-        assertFalse(service.isLocked("bob", "10.0.0.1"));
+        // 同一个账号只记一次失败，就已经锁定（IP 不再参与 key）
+        service.recordFailure("alice");
+        assertTrue(service.isLocked("alice"));
+        assertFalse(service.isLocked("bob"));
+    }
+
+    @Test
+    @DisplayName("账号大小写与首尾空白归一：Alice / alice 是同一条记录")
+    void accountKeyIsNormalized() {
+        AppSecurityProperties properties = new AppSecurityProperties();
+        properties.setLoginMaxFailures(1);
+        LoginAttemptService service = newService(properties);
+
+        service.recordFailure("  Alice  ");
+        assertTrue(service.isLocked("alice"));
+        assertEquals(1, repository.countAll());
     }
 
     @Test
@@ -67,14 +80,14 @@ class LoginAttemptServiceTest {
         properties.setLoginLockMillis(60_000L);
 
         LoginAttemptService beforeRestart = newService(properties);
-        beforeRestart.recordFailure("alice", "10.0.0.1");
-        beforeRestart.recordFailure("alice", "10.0.0.1");
-        assertTrue(beforeRestart.isLocked("alice", "10.0.0.1"));
+        beforeRestart.recordFailure("alice");
+        beforeRestart.recordFailure("alice");
+        assertTrue(beforeRestart.isLocked("alice"));
 
         LoginAttemptService afterRestart = newService(properties);
-        assertTrue(afterRestart.isLocked("alice", "10.0.0.1"), "重启后锁定状态应仍然有效");
-        assertTrue(afterRestart.retryAfterSeconds("alice", "10.0.0.1") > 0);
-        assertEquals(1, repository.countAll(), "每个账号+IP 只应有一条记录");
+        assertTrue(afterRestart.isLocked("alice"), "重启后锁定状态应仍然有效");
+        assertTrue(afterRestart.retryAfterSeconds("alice") > 0);
+        assertEquals(1, repository.countAll(), "每个账号只应有一条记录");
     }
 
     @Test
@@ -85,11 +98,11 @@ class LoginAttemptServiceTest {
         properties.setLoginLockMillis(0L);
         LoginAttemptService service = newService(properties);
 
-        service.recordFailure("alice", "10.0.0.1");
-        assertFalse(service.isLocked("alice", "10.0.0.1"), "锁定时间为 0 时应立即过期");
+        service.recordFailure("alice");
+        assertFalse(service.isLocked("alice"), "锁定时间为 0 时应立即过期");
         assertEquals(0, repository.countAll(), "过期记录应被清除");
 
-        service.recordFailure("alice", "10.0.0.1");
+        service.recordFailure("alice");
         assertEquals(1, repository.countAll());
     }
 }
