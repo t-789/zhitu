@@ -14,7 +14,6 @@ import org.example.lifecomposer.Repository.CollegeCreditRuleRepository;
 import org.example.lifecomposer.Repository.CreditActivityRepository;
 import org.example.lifecomposer.Repository.FeedbackRepository;
 import org.example.lifecomposer.Repository.LoginAttemptRepository;
-import org.example.lifecomposer.Repository.LoginLogRepository;
 import org.example.lifecomposer.Repository.PlanningHistoryRepository;
 import org.example.lifecomposer.Repository.ProfileChangeCandidateRepository;
 import org.example.lifecomposer.Repository.RagChunkRepository;
@@ -62,7 +61,6 @@ public class DatabaseInitializer {
     private final AppSecurityProperties securityProperties;
     private final AdminBootstrapService adminBootstrapService;
     private final LoginAttemptRepository loginAttemptRepository;
-    private final LoginLogRepository loginLogRepository;
     private final boolean importMode;
 
     public DatabaseInitializer(JdbcTemplate jdbcTemplate,
@@ -82,7 +80,6 @@ public class DatabaseInitializer {
                                UserCapabilityStateRepository userCapabilityStateRepository,
                                RecommendationFeedbackRepository recommendationFeedbackRepository,
                                LoginAttemptRepository loginAttemptRepository,
-                               LoginLogRepository loginLogRepository,
                                AppSecurityProperties securityProperties,
                                AdminBootstrapService adminBootstrapService,
                                Environment environment) {
@@ -103,7 +100,6 @@ public class DatabaseInitializer {
         this.userCapabilityStateRepository = userCapabilityStateRepository;
         this.recommendationFeedbackRepository = recommendationFeedbackRepository;
         this.loginAttemptRepository = loginAttemptRepository;
-        this.loginLogRepository = loginLogRepository;
         this.securityProperties = securityProperties;
         this.adminBootstrapService = adminBootstrapService;
         this.importMode = environment.getProperty("lifecomposer.import.mode", Boolean.class, false);
@@ -132,7 +128,6 @@ public class DatabaseInitializer {
         userCapabilityStateRepository.createTableIfNeeded();
         recommendationFeedbackRepository.createTableIfNeeded();
         loginAttemptRepository.createTableIfNeeded();
-        loginLogRepository.createTableIfNeeded();
         normalizeTimestampStorage();
 
         String usageCutoff = LocalDate.now(ZoneId.of(securityProperties.getChatUsageZone()))
