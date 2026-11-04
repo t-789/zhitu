@@ -50,10 +50,10 @@
 | POST | `/api/users/register` | 无（**需 CSRF**） | 请求 `username`、`password`，可选 `email`（合法邮箱、≤100 字符）和 `realName`（≤50 字符）；新用户页用学号作为 `username` 且要求邮箱/姓名。旧客户端可不传；邮箱小写存储、大小写不敏感唯一，未做邮箱验证。成功/失败均返回**纯文本**（`注册成功` / `注册失败，用户名或邮箱可能已存在`）。每 IP 每分钟 10 次，超限 429 `REGISTER_RATE_LIMIT` |
 | POST | `/api/users/login` | 无（**需 CSRF**） | 请求中的 `username` 可为用户名/学号或已注册邮箱（3-100 字符）；登录并设置 session。返回 JSON：`message` / `username` / `type` / `passwordChangeRequired` / `tempPasswordExpiresAt`。密码错误返回 400 `BAD_CREDENTIALS`；账号被封禁返回 400 `LOGIN_REJECTED`；连续失败 5 次锁定 15 分钟并返回 429 `LOGIN_LOCKED`（**遗留端点的锁状态码是 429，与 `/api/auth/login` 的 423 不同**，v1 删除该端点后统一为 423）；临时密码过期返回 403 `TEMP_PASSWORD_EXPIRED`；`passwordChangeRequired=true` 时必须先访问 `/front/change-password` |
 | POST | `/api/users/logout` | 已登录 | 登出，清除 session。返回纯文本 `登出成功` |
-| GET | `/api/users/current` | 已登录 | 获取当前用户信息（id/username/type/avatar/**isBanned**/banEndTime）。未登录由过滤器链拦截 → **403** |
+| GET | `/api/users/current` | 已登录 | 获取当前用户信息（id/username/type/avatar/**isBanned**/banEndTime）。**每次按 id 重新查库**，管理员事后修改的头像、角色、封禁状态立即可见；账号已被删除返回 401。未登录由过滤器链拦截 → **403** |
 | GET | `/api/users/all` | ADMIN | 获取所有用户（不含密码哈希）。该端点字段名是 `banned`（与 `/current` 的 `isBanned` 不同） |
-| PUT | `/api/users/{userId}/grant-admin` | ADMIN | 授予管理员。用户不存在返回 400（注意：不是 404） |
-| PUT | `/api/users/{userId}/revoke-admin` | ADMIN | 撤销管理员；系统必须保留至少一个可登录管理员，否则返回 409 `LAST_ADMIN_PROTECTED`；用户不存在返回 404 |
+| PUT | `/api/users/{userId}/grant-admin` | ADMIN | 授予管理员。用户不存在返回 400（注意：不是 404）。角色**真正发生变化**时该用户 `credential_version`+1，其已有会话下一次请求返回 401 `SESSION_EXPIRED`，需重新登录才获得新角色；对已是管理员的用户重复授予不影响其会话 |
+| PUT | `/api/users/{userId}/revoke-admin` | ADMIN | 撤销管理员；系统必须保留至少一个可登录管理员，否则返回 409 `LAST_ADMIN_PROTECTED`；用户不存在返回 404。撤销成功时该用户 `credential_version`+1，其旧会话（会话里仍冻结着 `ROLE_ADMIN`）下一次请求即返回 401 `SESSION_EXPIRED`；若管理员撤销的是自己，本次响应正常，之后需重新登录 |
 | PUT | `/api/users/{userId}/ban` | ADMIN | 封禁（body `{"banTime":"1d"}`）。单位：`y`=365 天、**`m`=30 天（月，不是分钟）**、`d`=天、`h`=小时，可组合如 `1y30d`；`"0"` 为永久。body 缺失/非法返回 400 `INVALID_INPUT`，最后一个可登录管理员返回 409 `LAST_ADMIN_PROTECTED`。封禁到期后下次登录自动解封 |
 | PUT | `/api/users/{userId}/unban` | ADMIN | 解封 |
 | POST | `/api/users/admin/reset-password/{userId}` | ADMIN | v0.0.6：下发**临时密码**，body `{"newPassword":"..."}`。管理员账户要求 ≥12 字符、普通用户账户要求 ≥8 字符，且均不得是已知弱密码；响应只返回 `message`/`passwordChangeRequired`/`tempPasswordExpiresAt`，绝不回显密码。临时密码带状态与有效期，见下文「临时密码生命周期」 |

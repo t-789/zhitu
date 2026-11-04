@@ -796,7 +796,7 @@ Milestone 7 管理控制台带来按用户/状态/类型/日期的分页筛选�
 | `password_reset_required` | 1 = 当前是管理员下发的临时密码，用户登录后必须先改密；改密成功置 0 |
 | `temp_password_expires_at` | 临时密码失效时刻（JDBC `Timestamp`，实际存储为 epoch 毫秒）；过期即拒绝登录，改密成功置 NULL |
 | `password_changed_at` | 最近一次设置密码的时间（注册/重置/自助修改都会更新） |
-| `credential_version` | 密码代号，每次密码变更 +1。会话登录时记录该值，之后每次请求比对；不一致说明密码已在别处变更，服务端立即销毁该会话（无需 SessionRegistry） |
+| `credential_version` | 凭据代号，每次密码变更、**授予/撤销管理员（角色真正变化时）** +1。会话登录时记录该值，之后每次请求比对；不一致说明密码已在别处变更，服务端立即销毁该会话（无需 SessionRegistry） |
 
 > 迁移：`UserRepository.migrateUserSchema()` 用 `PRAGMA table_info` 逐列检测并 `ALTER TABLE ADD COLUMN` 幂等补齐，`UserSchemaMigrationTest` 用真实旧版建表语句验证升级路径与默认值。
 > `spring.datasource.url` 增加 `transaction_mode=immediate`，使 `@Transactional` 写事务（管理员保护、密码变更）在事务开始即取得 SQLite 写锁，避免“先查数量再更新”的并发窗口。
