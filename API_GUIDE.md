@@ -1303,7 +1303,7 @@ LLM 按用途分组配置（`qa` / `planning` / `profile` / `sql` / `chat`），
 | `BAD_CREDENTIALS` | 400 | 登录 | 用户名或密码错误 |
 | `LOGIN_REJECTED` | 400 | 登录 | 账号被封禁 |
 | `TEMP_PASSWORD_EXPIRED` | 403 / 401 | 登录 / 会话守卫 | 临时密码过期 |
-| `SESSION_EXPIRED` | 401 | 会话守卫 | 密码变更导致会话失效 |
+| `SESSION_EXPIRED` | 401 | 会话守卫 | 密码变更或管理员角色被授予/撤销导致会话失效（`message` 目前统一为“密码已变更，请重新登录”） |
 | `PASSWORD_CHANGE_REQUIRED` | 401 | 会话守卫 | 必须先修改临时密码 |
 | `PASSWORD_REJECTED` | 400 | 自助改密 | 当前密码错 / 新密码弱 / 与旧相同 |
 | `WEAK_PASSWORD` | 400 | 管理员下发临时密码 | 密码不满足强度策略 |

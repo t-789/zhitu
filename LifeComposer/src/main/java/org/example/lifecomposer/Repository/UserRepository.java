@@ -238,8 +238,20 @@ public class UserRepository {
         return jdbcTemplate.query("SELECT * FROM users ORDER BY id", USER_ROW_MAPPER);
     }
 
+    /**
+     * Changes the role. A real change also bumps {@code credential_version}: the
+     * authorities of a session are fixed at login, so without the bump the user would
+     * keep the old role until they log out. Setting the role they already have is a
+     * no-op and leaves their sessions alone.
+     */
     public boolean updateUserType(int userId, int type) {
-        int rows = jdbcTemplate.update("UPDATE users SET type = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", type, userId);
+        int rows = jdbcTemplate.update("""
+                UPDATE users
+                SET credential_version = credential_version + CASE WHEN type = ? THEN 0 ELSE 1 END,
+                    type = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """, type, type, userId);
         return rows > 0;
     }
 
@@ -250,13 +262,16 @@ public class UserRepository {
      * database side. Callers additionally run inside a write transaction
      * (see {@code UserService#revokeAdminPermission}).
      *
+     * <p>Demotion bumps {@code credential_version}, so the demoted user's existing
+     * sessions (which still carry ROLE_ADMIN) are rejected on their next request.</p>
+     *
      * @return 1 when the user was demoted, 0 when it is not an administrator or
      *         demoting it would leave the system without a loginable admin.
      */
     public int revokeAdminIfNotLast(int userId) {
         return jdbcTemplate.update("""
                 UPDATE users
-                SET type = 1, updated_at = CURRENT_TIMESTAMP
+                SET type = 1, credential_version = credential_version + 1, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
                   AND type = 2
                   AND (SELECT COUNT(*) FROM users WHERE type = 2 AND is_banned = 0) > 1

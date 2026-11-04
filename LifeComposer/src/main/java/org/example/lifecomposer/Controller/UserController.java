@@ -192,10 +192,18 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
         }
 
-        User user = (User) session.getAttribute("user");
+        Object cached = session.getAttribute("user");
+        if (!(cached instanceof User cachedUser) || cachedUser.getId() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
+        }
+
+        // The session only remembers who logged in. Read the account again so that
+        // profile edits, role changes and bans made since then are visible.
+        User user = userService.getById(cachedUser.getId());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未登录");
         }
+        session.setAttribute("user", user);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("id", user.getId());
