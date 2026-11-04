@@ -1216,6 +1216,8 @@ if (res.status === 429) { /* JSON 配额体，非 SSE */ }
 
 **工具层错误码**（出现在 `tool_result` 的 `errorCode` 字段）：`UNKNOWN_TOOL`、`INVALID_ARGUMENTS`、`TOOL_EXECUTION_ERROR`、`EMPTY_TOOL_RESULT`、`RAG_UNAVAILABLE`
 
+工具层错误的 `message` 只含固定中文描述，不含异常原文、SQL、表名或路径，详细原因只写服务端日志。参数在执行前按工具自身的 JSON Schema 校验（`type`/`required`/`enum`/`additionalProperties`/`items`）：不合法时返回 `INVALID_ARGUMENTS`，`message` 列出全部问题和允许取值（如 `参数 type 取值必须是 [competition, course] 之一，收到 "比赛"`），模型可据此自行修正；显式 `null` 视为未提供。
+
 **编排参数**：
 - 最多 `8` 轮工具调用（`MAX_TOOL_ROUNDS`），超出抛 `LlmUnavailableException("MAX_TOOL_ROUNDS")`
 - 工具执行**永远使用当前登录用户的 userId**（`AgentToolContext`），模型无法指定他人 ID

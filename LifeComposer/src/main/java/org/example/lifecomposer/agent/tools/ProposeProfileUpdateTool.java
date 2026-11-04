@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.example.lifecomposer.Entity.ProfileChangeCandidate;
 import org.example.lifecomposer.Service.ProfileChangeService;
+import org.example.lifecomposer.Exception.ProfileApiException;
 import org.example.lifecomposer.agent.AgentTool;
 import org.example.lifecomposer.agent.AgentToolContext;
 import org.example.lifecomposer.agent.AgentToolSupport;
@@ -95,7 +96,9 @@ public class ProposeProfileUpdateTool implements AgentTool {
             List<ProfileChangeCandidate> created = profileChangeService.propose(
                     context.userId().longValue(), proposals, defaultRationale);
             return ToolResult.ok(profileChangeService.toToolPayload(created));
-        } catch (RuntimeException e) {
+        } catch (ProfileApiException e) {
+            // Business-rule rejections carry curated Chinese text. Anything else
+            // propagates to ToolRegistry, which hides the details from the model.
             return ToolResult.error("PROFILE_PROPOSAL_REJECTED", e.getMessage());
         }
     }

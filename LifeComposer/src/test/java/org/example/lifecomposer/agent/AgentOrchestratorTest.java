@@ -694,7 +694,12 @@ class AgentOrchestratorTest {
 
         @Override
         public Map<String, Object> parameterSchema() {
-            return Map.of("type", "object", "properties", Map.of(), "additionalProperties", false);
+            // Mirrors the real tool's top level: the model passes a "changes" array.
+            return Map.of(
+                    "type", "object",
+                    "properties", Map.of("changes", Map.of("type", "array")),
+                    "required", List.of("changes"),
+                    "additionalProperties", false);
         }
 
         @Override

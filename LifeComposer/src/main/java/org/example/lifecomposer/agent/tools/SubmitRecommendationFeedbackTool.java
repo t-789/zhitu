@@ -2,6 +2,7 @@ package org.example.lifecomposer.agent.tools;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.JsonObject;
+import org.example.lifecomposer.Exception.ProfileApiException;
 import org.example.lifecomposer.Service.RecommendationFeedbackService;
 import org.example.lifecomposer.agent.AgentTool;
 import org.example.lifecomposer.agent.AgentToolContext;
@@ -102,7 +103,7 @@ public class SubmitRecommendationFeedbackTool implements AgentTool {
             data.put("feedbackType", dto.getFeedbackType());
             data.put("createdAt", dto.getCreatedAt());
             return ToolResult.ok(data);
-        } catch (RuntimeException e) {
+        } catch (ProfileApiException e) {
             return ToolResult.error("INVALID_FEEDBACK", e.getMessage());
         }
     }
