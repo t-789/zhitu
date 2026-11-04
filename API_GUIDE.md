@@ -1286,6 +1286,7 @@ if (res.status === 429) { /* JSON 配额体，非 SSE */ }
 | `lifecomposer.admin.console-preview-length` | `300` | 列表预览截断长度（最小 40） |
 | `lifecomposer.admin.console-diagnostic-length` | `4000` | 详情诊断字段截断长度（最小 200） |
 | `rag.defaultTopK` / `rag.maxTopK` / `rag.minSimilarity` | `5` / `20` / `0.2` | RAG 检索默认参数 |
+| `rag.indexMaxAgeSeconds` | `300` | 内存向量索引的最长存活时间（安全网，`0` 关闭）。索引在每次检索时用一条聚合查询比对向量集合是否变化，变化即重建；导入 CLI 是独立进程，导入完成后无需重启服务 |
 | `embedding.baseUrl` / `embedding.model` | `http://localhost:11434/v1` / `quentinz/bge-small-zh-v1.5:f16` | 本地 Ollama embedding |
 
 LLM 按用途分组配置（`qa` / `planning` / `profile` / `sql` / `chat`），字段：`provider`、`baseUrl`、`model`、`apiKeyEnv`、`enabled`、`timeoutMillis`、`maxRetries`（默认 `2`）、`retryBaseDelayMillis`（默认 `500`）。连接失败或 HTTP 429/500/502/503/504 时在**收到任何响应内容之前**按 `base × 2^n` 退避重试（上限 5 秒，优先采用 `Retry-After`）；读超时和流式输出已开始后不重试。`maxRetries=0` 关闭重试。默认全部指向 DeepSeek `deepseek-flash`；`run.sh` 默认开启 `qa` 与 `chat`。

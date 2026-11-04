@@ -52,14 +52,50 @@ public class RagChunkRepository {
         return jdbcTemplate.query(sql, RAG_CHUNK_ROW_MAPPER);
     }
 
-    /** 仅返回有 embedding 的切片；没有向量的切片不参与检索。 */
-    public List<RagChunk> findAllWithEmbedding() {
-        String sql = """
-                SELECT * FROM rag_chunks
+    /** 检索索引需要的最小列：不含标题、正文等大字段。 */
+    public record EmbeddingRow(String chunkId, String embeddingJson, String embeddingModel, Integer dimensions) {
+    }
+
+    /** 判断向量集合是否变化：有向量的切片数量 + 其中最新的向量写入时间。 */
+    public record EmbeddingFingerprint(int count, String latestUpdate) {
+    }
+
+    /** 有向量的切片的最小列；没有向量的切片不参与检索。 */
+    public List<EmbeddingRow> findEmbeddingRows() {
+        return jdbcTemplate.query("""
+                SELECT chunk_id, embedding_json, embedding_model, embedding_dimensions
+                FROM rag_chunks
                 WHERE embedding_json IS NOT NULL AND TRIM(embedding_json) != ''
                 ORDER BY chunk_id
-                """;
-        return jdbcTemplate.query(sql, RAG_CHUNK_ROW_MAPPER);
+                """, (rs, rowNum) -> {
+            int dimensions = rs.getInt("embedding_dimensions");
+            return new EmbeddingRow(
+                    rs.getString("chunk_id"),
+                    rs.getString("embedding_json"),
+                    rs.getString("embedding_model"),
+                    rs.wasNull() ? null : dimensions);
+        });
+    }
+
+    /** 一条轻量聚合查询，供检索缓存判断是否需要重建（导入 CLI 是独立进程，无法主动通知）。 */
+    public EmbeddingFingerprint embeddingFingerprint() {
+        return jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) AS cnt, MAX(embedding_updated_at) AS latest
+                FROM rag_chunks
+                WHERE embedding_json IS NOT NULL AND TRIM(embedding_json) != ''
+                """, (rs, rowNum) -> new EmbeddingFingerprint(rs.getInt("cnt"), rs.getString("latest")));
+    }
+
+    /** 按 chunk_id 批量取完整切片；已不存在的 id 不会出现在结果里。 */
+    public List<RagChunk> findByChunkIds(java.util.Collection<String> chunkIds) {
+        if (chunkIds == null || chunkIds.isEmpty()) {
+            return List.of();
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(chunkIds.size(), "?"));
+        return jdbcTemplate.query(
+                "SELECT * FROM rag_chunks WHERE chunk_id IN (" + placeholders + ")",
+                RAG_CHUNK_ROW_MAPPER,
+                chunkIds.toArray());
     }
 
     /** 按业务键 resources.resource_id 过滤切片（related_resource_id 可为 NULL，过滤时不返回）。 */
