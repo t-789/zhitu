@@ -27,6 +27,29 @@ import java.util.List;
 @Configuration
 public class WebSecurityConfig {
 
+    /**
+     * Response CSP. The only third-party origins the pages use are jsDelivr (KaTeX in
+     * the chat page) and Google Fonts (the login/register page); everything else is
+     * same-origin.
+     *
+     * <p>{@code 'unsafe-inline'} on {@code script-src} is a transition measure: the
+     * templates still contain inline {@code <script>} blocks and {@code onclick}
+     * attributes. Remove it once the front end moves them into static files; until
+     * then the policy still blocks foreign scripts, plugins, foreign form targets and
+     * framing by other sites ({@code frame-ancestors}).</p>
+     */
+    static final String CONTENT_SECURITY_POLICY = String.join("; ",
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com",
+            "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com",
+            "img-src 'self' data:",
+            "connect-src 'self'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'self'");
+
     private final AppSecurityProperties securityProperties;
     private final UserRepository userRepository;
 
@@ -51,7 +74,11 @@ public class WebSecurityConfig {
                 .addFilterBefore(new SessionCredentialGuardFilter(userRepository),
                         AuthorizationFilter.class)
                 .requestCache(cache -> cache.requestCache(new NullRequestCache()))
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+                // Clickjacking: only this site may frame its own pages (the admin console's
+                // ban/grant buttons must not be embeddable by other sites).
+                .headers(headers -> headers
+                        .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY)))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .sessionFixation(fixation -> fixation.changeSessionId()))

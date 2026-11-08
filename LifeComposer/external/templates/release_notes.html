@@ -243,6 +243,20 @@
         </div>
     </div>
 
+    <!-- ========== Unreleased: 前端消毒与安全头 ========== -->
+    <div class="container">
+        <h1>对话页消毒不再依赖 CDN，并加上防嵌入与内容安全策略</h1>
+
+        <div class="improvement-list">
+            <h3>用户可见变化</h3>
+            <ul>
+                <li><b>对话页 Markdown 渲染</b>：marked 与 DOMPurify 改由本站提供；任何一个加载失败时，助手消息显示为纯文本，不再把未消毒内容写进页面。KaTeX 仍走 CDN，并增加完整性校验。</li>
+                <li><b>防嵌入</b>：<code>X-Frame-Options</code> 由“关闭”改为 <code>SAMEORIGIN</code>，其他网站无法再用 iframe 嵌入本站页面（含管理控制台）。</li>
+                <li><b>内容安全策略（CSP）</b>：新增 <code>Content-Security-Policy</code>，限制脚本、样式、字体、表单提交的来源。<code>script-src</code> 暂时仍允许内联脚本，待模板迁移后收紧。</li>
+            </ul>
+        </div>
+    </div>
+
     <!-- ========== v0.1.9 ========== -->
     <div class="container">
         <h1>v0.1.9 — 登录安全模块：分层锁定、可信 IP、审计脱敏与部署说明</h1>
