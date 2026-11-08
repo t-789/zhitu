@@ -49,11 +49,24 @@ public class CompetitionScoringService {
             "innovation_contest::创新创业,挑战杯,互联网+,大创,创业,商业计划",
             "design_contest::设计,文创,工业设计");
 
+    /** 排除词的别名组：用户说“不要数模”时也能过滤“数学建模”。 */
+    private static final List<List<String>> EXCLUDE_ALIASES = List.of(
+            List.of("数模", "数学建模", "建模"),
+            List.of("AI", "人工智能", "大模型", "机器学习", "深度学习"),
+            List.of("网安", "网络安全", "信安", "CTF", "攻防"),
+            List.of("算法", "程序设计", "编程"),
+            List.of("电子", "嵌入式", "机器人", "机械", "硬件", "物联网"),
+            List.of("创业", "创新", "挑战杯", "互联网+", "大创", "商业计划"),
+            List.of("设计", "文创", "工业设计"));
+
     private final CompetitionProperties properties;
     private final ContestStatusCalculator statusCalculator;
     private final CapabilityNormalizationService normalizationService;
     private final GrowthDirectionCatalog directionCatalog;
     private final EmbeddingClient embeddingClient;
+
+    /** 单次 rank 内的向量缓存：同一事件文本只 embed 一次。 */
+    private final ThreadLocal<Map<String, List<Double>>> embeddingCache = ThreadLocal.withInitial(LinkedHashMap::new);
 
     public CompetitionScoringService(CompetitionProperties properties,
                                      ContestStatusCalculator statusCalculator,
@@ -185,6 +198,7 @@ public class CompetitionScoringService {
 
     public Ranking rank(List<ContestEvent> events, ProfileSnapshot profile, Request req, Instant now) {
         int total = events.size();
+        embeddingCache.get().clear();
 
         // 1. 硬过滤。
         List<ContestEvent> hardFiltered = new ArrayList<>();
@@ -201,10 +215,13 @@ public class CompetitionScoringService {
         String queryText = queryText(profile, req);
         List<Double> queryVector = embedOrNull(queryText);
 
-        // 4. 打分。
+        // 4. 打分，并过滤掉未达最低展示分（tier==null）的弱匹配项。
         List<Scored> scored = new ArrayList<>();
         for (ContestEvent e : hardFiltered) {
-            scored.add(scoreOne(e, profile, req, now, currentDirection, queryVector));
+            Scored s = scoreOne(e, profile, req, now, currentDirection, queryVector);
+            if (s.tier() != null) {
+                scored.add(s);
+            }
         }
 
         // 5. 排序：总分降序，平局按来源可信度（官网 > 官方通知 > 其他 > 单源）。
@@ -351,8 +368,21 @@ public class CompetitionScoringService {
         append(hay, e.getSourceName());
         String lower = hay.toString().toLowerCase(Locale.ROOT);
         for (String keyword : excludeKeywords) {
-            if (!keyword.isBlank() && lower.contains(keyword.toLowerCase(Locale.ROOT))) {
-                return true;
+            if (keyword.isBlank()) {
+                continue;
+            }
+            // bug5：排除词走别名组，例如"数模"也命中"数学建模"。
+            List<String> variants = new ArrayList<>(List.of(keyword));
+            for (List<String> group : EXCLUDE_ALIASES) {
+                if (group.stream().anyMatch(g -> g.equalsIgnoreCase(keyword))) {
+                    variants.addAll(group);
+                    break;
+                }
+            }
+            for (String v : variants) {
+                if (lower.contains(v.toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
             }
         }
         return false;
@@ -377,20 +407,27 @@ public class CompetitionScoringService {
     }
 
     private String effectiveGrade(ProfileSnapshot profile, Request req) {
-        if (req.gradeHint() != null) {
-            return req.gradeHint();
-        }
-        if (profile.grade() == null || profile.grade().isBlank()) {
+        String raw = req.gradeHint() != null ? req.gradeHint() : profile.grade();
+        if (raw == null || raw.isBlank()) {
             return null;
         }
-        String lower = profile.grade().toLowerCase(Locale.ROOT);
-        if (lower.contains("研")) {
+        String lower = raw.toLowerCase(Locale.ROOT);
+        if (lower.contains("研") || lower.contains("研究生") || lower.contains("博士")
+                || lower.contains("硕士") || lower.contains("graduate")) {
             return "graduate";
         }
-        if (lower.contains("大")) {
+        if (lower.contains("大") || lower.contains("本科") || lower.contains("undergraduate")) {
             return "undergraduate";
         }
         return null;
+    }
+
+    /** 难度计算用的精确年级：query 里的年级（已精确）优先，否则画像原文。 */
+    private String preciseGrade(ProfileSnapshot profile, Request req) {
+        if (req.gradeHint() != null && !req.gradeHint().isBlank()) {
+            return req.gradeHint();
+        }
+        return profile.grade();
     }
 
     // ------------------------------------------------------------------
@@ -405,11 +442,11 @@ public class CompetitionScoringService {
         List<String> required = requiredSkills(profileKey);
         List<String> userSkills = profile.skills();
 
-        double skillFit = skillFit(userSkills, required, profileKey);
+        double skillFit = skillFit(required, userSkills, profileKey);
         double directionFit = directionFit(required, currentDirection);
         double semanticFit = semanticFit(e, profile, req, queryVector);
         double goalFit = clamp(0.5 * directionFit + 0.5 * semanticFit);
-        double difficultyFit = difficultyFit(e.getLevel(), effectiveGrade(profile, req), req.beginner());
+        double difficultyFit = difficultyFit(e.getLevel(), preciseGrade(profile, req), req.beginner());
         double timeFit = timeFit(e, profile, req);
         double transferFit = transferFit(required);
         double deadlineFit = deadlineFit(status.daysLeft());
@@ -425,10 +462,14 @@ public class CompetitionScoringService {
         }
         total = clamp(total);
 
-        String relatedDirection = currentDirection == null ? null : currentDirection.getName();
+        // 仅当该赛事与当前方向真实相关（directionFit 达标）时才标注方向，避免每条都填同一方向。
+        String relatedDirection = (currentDirection != null && directionFit >= 0.6)
+                ? currentDirection.getName() : null;
+        List<String> matchedSkills = required.stream().filter(userSkills::contains).toList();
         List<String> gapSkills = new ArrayList<>(required);
         gapSkills.removeAll(userSkills);
-        List<String> fitReasons = fitReasons(skillFit, directionFit, semanticFit, status, e, profile, req);
+        List<String> fitReasons = fitReasons(skillFit, directionFit, semanticFit, status, e, profile, req,
+                matchedSkills, gapSkills);
         List<String> riskNotes = riskNotes(profileKey, e, status);
         List<String> startPoints = startPoints(gapSkills);
         String nextAction = nextAction(status.daysLeft(), gapSkills, e, profile);
@@ -512,10 +553,17 @@ public class CompetitionScoringService {
         if (text == null || text.isBlank() || embeddingClient == null || !embeddingClient.isEnabled()) {
             return null;
         }
+        Map<String, List<Double>> cache = embeddingCache.get();
+        if (cache.containsKey(text)) {
+            return cache.get(text);
+        }
         try {
             EmbeddingResult result = embeddingClient.embed(text);
-            return result == null ? null : result.vector();
+            List<Double> vector = result == null ? null : result.vector();
+            cache.put(text, vector);
+            return vector;
         } catch (EmbeddingException e) {
+            cache.put(text, null);
             return null;
         }
     }
@@ -563,13 +611,14 @@ public class CompetitionScoringService {
             return 2; // 未知按校级~省级中性。
         }
         String lower = grade.toLowerCase(Locale.ROOT);
-        if (lower.contains("研二") || lower.contains("研三")) {
+        if (lower.contains("研二") || lower.contains("研三") || lower.contains("博士")) {
             return 4;
         }
-        if (lower.contains("研一") || lower.contains("大三") || lower.contains("大四")) {
+        if (lower.contains("研一") || lower.contains("研究生") || lower.contains("硕士")
+                || lower.contains("大三") || lower.contains("大四")) {
             return 3;
         }
-        if (lower.contains("大二")) {
+        if (lower.contains("大二") || lower.contains("本科生") || lower.contains("本科")) {
             return 2;
         }
         if (lower.contains("大一")) {
@@ -661,7 +710,8 @@ public class CompetitionScoringService {
             return null; // 不展示。
         }
         if (status.nextDeadline() == null || status.daysLeft() == null) {
-            return "长期关注";
+            // bug12：无截止只收官网核验条目（长期关注），且在 diversify 限制 ≤1。
+            return "official_site".equals(e.getVerificationStatus()) ? "长期关注" : null;
         }
         if (difficultyFit < 0.6 && total >= properties.getReachMinScore()) {
             return "冲一冲";
@@ -678,10 +728,14 @@ public class CompetitionScoringService {
 
     private List<String> fitReasons(double skillFit, double directionFit, double semanticFit,
                                     ContestStatusCalculator.StatusResult status, ContestEvent e,
-                                    ProfileSnapshot profile, Request req) {
+                                    ProfileSnapshot profile, Request req,
+                                    List<String> matchedSkills, List<String> gapSkills) {
         List<String> reasons = new ArrayList<>();
-        if (skillFit >= 0.75 && !profile.skills().isEmpty()) {
-            reasons.add("技能匹配度高");
+        // bug10：写出具体已具备/缺少的能力，而非笼统的"技能匹配度高"。
+        if (skillFit >= 0.75 && !matchedSkills.isEmpty()) {
+            reasons.add("已具备：" + String.join("、", matchedSkills));
+        } else if (!gapSkills.isEmpty() && !req.interestKeywords().isEmpty()) {
+            reasons.add("需补：" + String.join("、", gapSkills));
         }
         if (directionFit >= 0.6) {
             reasons.add("与你当前成长方向相关");
@@ -827,52 +881,64 @@ public class CompetitionScoringService {
     private List<Scored> diversify(List<Scored> scored, ProfileSnapshot profile, int limit,
                                    GrowthDirection currentDirection) {
         List<Scored> collapsed = collapseMultiTrack(scored);
+        if (collapsed.isEmpty()) {
+            return List.of();
+        }
 
-        // 贪心构建：每 primaryCategory ≤2；优先官网/校内。
-        List<Scored> top = new ArrayList<>();
+        // 先保留「保证条目」：≥1 校内、有方向时 ≥1 方向相关（bug11：避免追加后再被截掉）。
+        List<Scored> reserved = new ArrayList<>();
+        for (Scored s : collapsed) {
+            if (isCampus(s)) {
+                reserved.add(s);
+                break;
+            }
+        }
+        if (currentDirection != null) {
+            for (Scored s : collapsed) {
+                if (currentDirection.getName().equals(s.relatedDirection())
+                        && reserved.stream().noneMatch(r -> r.event().getEventKey().equals(s.event().getEventKey()))) {
+                    reserved.add(s);
+                    break;
+                }
+            }
+        }
+        if (reserved.size() > limit) {
+            reserved = new ArrayList<>(reserved.subList(0, limit));
+        }
+
+        // 贪心填满剩余名额，每 primaryCategory ≤2；长期关注（无截止官网）≤1。
+        List<Scored> top = new ArrayList<>(reserved);
         Map<String, Integer> categoryCount = new LinkedHashMap<>();
+        int longTermCount = 0;
+        for (Scored s : reserved) {
+            categoryCount.merge(s.primaryCategory(), 1, Integer::sum);
+            if ("长期关注".equals(s.tier())) {
+                longTermCount++;
+            }
+        }
         for (Scored s : collapsed) {
             if (top.size() >= limit) {
                 break;
             }
+            if (reserved.stream().anyMatch(r -> r.event().getEventKey().equals(s.event().getEventKey()))) {
+                continue;
+            }
             String cat = s.primaryCategory();
-            int count = categoryCount.getOrDefault(cat, 0);
-            if (count >= 2) {
+            if (categoryCount.getOrDefault(cat, 0) >= 2) {
+                continue;
+            }
+            if ("长期关注".equals(s.tier()) && longTermCount >= 1) {
                 continue;
             }
             top.add(s);
-            categoryCount.put(cat, count + 1);
-        }
-
-        // 保证 ≥1 条校内/校级（若有）。
-        if (top.stream().noneMatch(this::isCampus)) {
-            for (Scored s : collapsed) {
-                if (!isCampus(s)) {
-                    continue;
-                }
-                if (top.stream().noneMatch(t -> t.event().getEventKey().equals(s.event().getEventKey()))) {
-                    top.add(s);
-                    break;
-                }
+            categoryCount.merge(cat, 1, Integer::sum);
+            if ("长期关注".equals(s.tier())) {
+                longTermCount++;
             }
         }
 
-        // 有方向时，保证 ≥1 条与方向相关（directionFit 高已在 relatedDirection 体现；这里按 relatedDirection 判断）。
-        if (currentDirection != null && top.stream().noneMatch(s -> currentDirection.getName().equals(s.relatedDirection()))) {
-            for (Scored s : collapsed) {
-                if (currentDirection.getName().equals(s.relatedDirection())
-                        && top.stream().noneMatch(t -> t.event().getEventKey().equals(s.event().getEventKey()))) {
-                    top.add(s);
-                    break;
-                }
-            }
-        }
-
-        // 最终按总分重排并截断。
+        // 最终按总分重排（top 已 ≤ limit，无需再截断）。
         top.sort(Comparator.comparingDouble((Scored s) -> -s.total()));
-        if (top.size() > limit) {
-            top = new ArrayList<>(top.subList(0, limit));
-        }
         return top;
     }
 

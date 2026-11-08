@@ -97,16 +97,26 @@ public class CompetitionQueryParser {
     }
 
     private String gradeHint(String lower) {
-        if (lower.contains("研一") || lower.contains("研二") || lower.contains("研三")) {
-            return "graduate";
-        }
-        if (lower.contains("大一") || lower.contains("大二") || lower.contains("大三") || lower.contains("大四")) {
-            return "undergraduate";
+        // 返回精确年级文本（大一~研三/研究生/本科生/博士生），供难度计算按年级细分；
+        // 粗粒度 graduate/undergraduate 由 ScoringService.effectiveGrade 再归一化。
+        for (String key : GRADE_KEYS) {
+            if (lower.contains(key)) {
+                return key;
+            }
         }
         return null;
     }
 
     private String mode(String lower) {
+        // bug4：否定感知。"不要线下/不想线下"→online，"不要线上"→offline。
+        boolean negOnline = isNegated(lower, ONLINE);
+        boolean negOffline = isNegated(lower, OFFLINE);
+        if (negOffline && !negOnline) {
+            return "online";
+        }
+        if (negOnline && !negOffline) {
+            return "offline";
+        }
         if (containsAny(lower, HYBRID)) {
             return "hybrid";
         }
@@ -117,6 +127,25 @@ public class CompetitionQueryParser {
             return "offline";
         }
         return null;
+    }
+
+    /** 某组模式词是否被"不要/不想/别"等否定标记修饰。 */
+    private boolean isNegated(String lower, List<String> words) {
+        for (String word : words) {
+            int idx = lower.indexOf(word.toLowerCase(Locale.ROOT));
+            if (idx < 0) {
+                continue;
+            }
+            // 检查词前 6 个字符内是否有否定标记。
+            int from = Math.max(0, idx - 6);
+            String before = lower.substring(from, idx);
+            for (String marker : EXCLUDE_MARKERS) {
+                if (before.contains(marker.toLowerCase(Locale.ROOT))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private String level(String lower) {
@@ -138,7 +167,7 @@ public class CompetitionQueryParser {
     private List<String> interestKeywords(String q, String lower) {
         LinkedHashSet<String> hits = new LinkedHashSet<>();
         for (String keyword : INTEREST_KEYWORDS) {
-            if (lower.contains(keyword.toLowerCase(Locale.ROOT))) {
+            if (lower.contains(keyword.toLowerCase(Locale.ROOT)) && !isNegated(lower, List.of(keyword))) {
                 hits.add(keyword);
             }
         }
@@ -162,19 +191,23 @@ public class CompetitionQueryParser {
         return new ArrayList<>(hits);
     }
 
-    /** 取排除标记后面的第一个类别词（最多 6 个字符），用于 later 的类别过滤。 */
+    /** 取排除标记后面的第一个类别词，用于 later 的类别过滤。 */
     private String firstCategoryWord(String rest) {
         if (rest == null || rest.isBlank()) {
             return null;
         }
         String trimmed = rest.trim();
-        int end = Math.min(trimmed.length(), 6);
-        String candidate = trimmed.substring(0, end);
-        String lower = candidate.toLowerCase(Locale.ROOT);
+        String lower = trimmed.toLowerCase(Locale.ROOT);
+        // bug5：用 contains 而非 startsWith，"打数模"应识别出"数模"。
+        String best = null;
         for (String keyword : INTEREST_KEYWORDS) {
-            if (lower.startsWith(keyword.toLowerCase(Locale.ROOT))) {
-                return keyword;
+            if (lower.contains(keyword.toLowerCase(Locale.ROOT))
+                    && (best == null || keyword.length() > best.length())) {
+                best = keyword;
             }
+        }
+        if (best != null) {
+            return best;
         }
         // 取第一个标点前的片段作为关键词。
         int cut = trimmed.length();

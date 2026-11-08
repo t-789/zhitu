@@ -50,6 +50,43 @@ public class ContestStatusCalculator {
             return new StatusResult("archived", null, null);
         }
 
+        // 校内通知：deadlines_json 是唯一可信的截止来源，primary_deadline 只是其中一个节点。
+        // 必须先走通知逻辑，否则下方的 primary 分支会把它误判成“提交中”（bug：报名 vs 材料节点）。
+        if ("notice".equals(e.getSourceKind()) || "notice".equals(e.getEventType())) {
+            return computeNotice(e, now);
+        }
+        return computeCompetition(e, now);
+    }
+
+    /** 校内通知：任一未来截止节点即仍可行动；优先取“报名”节点，否则“提交中”。 */
+    private StatusResult computeNotice(ContestEvent e, Instant now) {
+        List<Deadline> deadlines = parseDeadlines(e.getDeadlinesJson());
+        List<Deadline> future = deadlines.stream()
+                .filter(d -> !d.date().isBefore(now))
+                .sorted(Comparator.comparing(Deadline::date))
+                .toList();
+        if (!future.isEmpty()) {
+            boolean hasRegistration = future.stream()
+                    .anyMatch(d -> d.label() != null && d.label().contains("报名"));
+            return result(hasRegistration ? "registration_open" : "submission_open",
+                    future.get(0).date(), now);
+        }
+        if (!deadlines.isEmpty()) {
+            Instant maxDeadline = deadlines.stream()
+                    .map(Deadline::date).max(Instant::compareTo).orElse(null);
+            if (maxDeadline != null && now.isAfter(maxDeadline)) {
+                return result("ended", maxDeadline, now);
+            }
+        }
+        // 无 deadlines 节点时回退 primary_deadline。
+        Instant primary = parse(e.getPrimaryDeadline());
+        if (primary != null) {
+            return now.isAfter(primary) ? result("ended", primary, now) : result("submission_open", primary, now);
+        }
+        return result("unknown", null, now);
+    }
+
+    private StatusResult computeCompetition(ContestEvent e, Instant now) {
         Instant regStart = parse(e.getRegistrationStart());
         Instant regEnd = parse(e.getRegistrationDeadline());
         Instant compStart = parse(e.getCompetitionStart());
@@ -70,33 +107,20 @@ public class ContestStatusCalculator {
             return result("ongoing", nextDeadline, now);
         }
         if (compStart != null && now.isBefore(compStart)) {
-            return result(regEnd != null ? "registration_closed" : "registration_upcoming", nextDeadline, now);
+            // 比赛未开始：只有存在报名信息时才给出报名状态；无任何报名信息不能声称“即将报名”。
+            if (regEnd != null) {
+                return result("registration_closed", nextDeadline, now);
+            }
+            if (regStart != null) {
+                return result("registration_upcoming", nextDeadline, now);
+            }
+            // 无报名信息：落到下方 unknown。
         }
         if (primary != null && !now.isAfter(primary)) {
             return result("submission_open", nextDeadline, now);
         }
-        if (compEnd != null && !now.isAfter(compEnd)) {
+        if (compEnd != null && !now.isAfter(compEnd) && (compStart == null || !now.isBefore(compStart))) {
             return result("ongoing", nextDeadline, now);
-        }
-
-        // 校内通知：deadlines_json 里可能有多个“报名截止/材料提交”，任一未来节点即仍可行动。
-        List<Deadline> noticeDeadlines = parseDeadlines(e.getDeadlinesJson());
-        List<Deadline> noticeFuture = noticeDeadlines.stream()
-                .filter(d -> !d.date().isBefore(now))
-                .sorted(Comparator.comparing(Deadline::date))
-                .toList();
-        if (!noticeFuture.isEmpty()) {
-            boolean hasRegistration = noticeFuture.stream()
-                    .anyMatch(d -> d.label() != null && d.label().contains("报名"));
-            return result(hasRegistration ? "registration_open" : "submission_open",
-                    noticeFuture.get(0).date(), now);
-        }
-        if (!noticeDeadlines.isEmpty()) {
-            Instant maxDeadline = noticeDeadlines.stream()
-                    .map(Deadline::date).max(Instant::compareTo).orElse(null);
-            if (maxDeadline != null && now.isAfter(maxDeadline)) {
-                return result("ended", maxDeadline, now);
-            }
         }
 
         String hint = e.getStatusHint();

@@ -23,12 +23,14 @@ public class PromptComposer {
      */
     private static final List<String> DIRECTION_KEYWORDS = List.of(
             "推荐", "方向", "路径", "适合", "为什么", "差哪", "缺少", "提升", "规划",
-            "学习路线", "入门", "刷题", "拿奖", "技能", "能力", "缺什么", "差什么");
+            "学习路线", "入门", "刷题", "拿奖", "技能", "能力", "缺什么", "差什么",
+            "准备", "怎么准备", "如何准备", "备考");
 
     /** Direction-specific words, excluding the weak words "推荐"/"适合". */
     private static final List<String> DIRECTION_STRONG_KEYWORDS = List.of(
             "方向", "路径", "为什么", "差哪", "缺少", "提升", "规划",
-            "学习路线", "入门", "刷题", "拿奖", "技能", "能力", "缺什么", "差什么");
+            "学习路线", "入门", "刷题", "拿奖", "技能", "能力", "缺什么", "差什么",
+            "准备", "怎么准备", "如何准备", "备考");
 
     /** Competition-specific words that select the competition recommendation prompt. */
     private static final List<String> COMPETITION_KEYWORDS = List.of(

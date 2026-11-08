@@ -278,11 +278,20 @@ public class CompetitionRecommendationService {
                                                     String level, String mode,
                                                     List<String> excludeKeywords, List<String> excludeEventKeys,
                                                     Integer limit, CompetitionQueryParser.ParsedQuery parsed) {
-        String effScope = scope == null || scope.isBlank() ? "china" : scope;
         Integer effDeadline = deadlineWithinDays != null ? deadlineWithinDays : parsed.deadlineWithinDays();
         String effLevel = level != null && !level.isBlank() ? level : parsed.level();
         String effMode = mode != null && !mode.isBlank() ? mode : parsed.mode();
         boolean effOngoing = includeOngoing || parsed.includeOngoing();
+
+        // bug13：用户问"国际比赛"时范围应放开到国际（默认仍国内）。
+        String effScope;
+        if (scope != null && !scope.isBlank()) {
+            effScope = scope;
+        } else if ("international".equals(effLevel)) {
+            effScope = "all";
+        } else {
+            effScope = "china";
+        }
 
         LinkedHashSet<String> exclude = new LinkedHashSet<>();
         if (excludeKeywords != null) {
