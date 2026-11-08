@@ -76,6 +76,11 @@ class CompetitionScoringServiceTest {
                 List.of(), List.of(), 5, grade, null, false, null);
     }
 
+    private static Request request(String grade, List<String> interests) {
+        return new Request("china", null, false, null, null, null,
+                List.of(), List.of(), 5, grade, interests, false, null);
+    }
+
     private static Scored find(Ranking ranking, String eventKey) {
         return ranking.items().stream()
                 .filter(s -> s.event().getEventKey().equals(eventKey))
@@ -161,10 +166,14 @@ class CompetitionScoringServiceTest {
         ProfileSnapshot algoUser = new ProfileSnapshot("大二", null,
                 List.of("编程基础", "算法与数据结构"), List.of(), List.of(), 8.0);
 
-        Ranking ranking = scoringService.rank(List.of(event), algoUser, request("大二"), NOW);
+        // 用户对「设计」有兴趣（semanticFit 命中），但算法方向与设计赛事不相关：
+        // 赛事应通过阈值进入结果，但 relatedDirection 必须为 null。
+        Ranking ranking = scoringService.rank(List.of(event), algoUser,
+                request("大二", List.of("设计")), NOW);
         Scored scored = find(ranking, "cddl_design");
 
-        assertNotNull(scored, "设计赛事应通过硬过滤");
+        assertNotNull(scored, "设计赛事应通过硬过滤（兴趣命中，总分过阈值）");
+        assertNotNull(scored.tier(), "通过过滤的赛事必须有分档");
         assertNull(scored.relatedDirection(),
                 "设计赛事与算法方向无关，不能标注方向相关");
     }

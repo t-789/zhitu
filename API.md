@@ -146,7 +146,7 @@
 - 候选有效期由 `lifecomposer.profile-change.ttl-minutes`（默认 30）控制；过期候选不会写入画像。
 - 决策后服务端发起一次短的 Agent 续答（`agentMessage`），把结构化结果交回模型；LLM 不可用时返回确定性兜底文案，决策本身仍已落库。
 - **AI 额度边界（审核整改）**：只有真正产生新决策（PENDING → CONFIRMED/REJECTED）的那一次请求才调用 Agent 续答，并经过 `ChatQuotaService` 与 `/api/chat/*` 相同的分钟/日额度。重复确认、已过期、冲突和跨用户请求是幂等业务操作，不再调用 LLM、不再消耗额度。额度耗尽时决策仍成功落库，响应含 `quotaExceeded:true` 与 `retryAfterSeconds`，仅跳过 AI 续答。
-- **可追溯性**：响应含 `promptVersions`（本次使用的提示词 id → 版本），SSE 在流开始发送 `prompt_versions` 事件；assistant 消息把版本指纹写入 `chat_messages.prompt_version`。当本轮实际调用了推荐/能力/路径工具时，服务端会在后续轮次的 system prompt 中补上 `DIRECTION_EXPLANATION` 与 `PATH_SUGGESTION` 契约，不依赖用户原话是否命中关键词。
+- **可追溯性**：响应含 `promptVersions`（本次使用的提示词 id → 版本），SSE 在流开始发送 `prompt_versions` 事件；assistant 消息把版本指纹写入 `chat_messages.prompt_version`。当本轮实际调用了推荐/能力/路径工具时，服务端会在后续轮次的 system prompt 中补上 `DIRECTION_EXPLANATION` 与 `PATH_SUGGESTION` 契约；当本轮调用了赛事工具时补上 `COMPETITION_RECOMMENDATION` 契约，均不依赖用户原话是否命中关键词。
 
 ## 成长方向与路径推荐（v0.1 M5/M6）
 
@@ -162,6 +162,8 @@
 - 面向用户时，Agent 禁止输出 `scoreBreakdown`、`goalRelevance`、`skillMatch`、`matchedTags` 等内部字段名；推荐工具额外返回 `explanationHints`（技能匹配/时间匹配/目标相关性/难度/准备周期），Agent 必须用中文维度解释，缺少信息时先追问。
 - Agent 必须忠实于工具数据：只根据工具返回的资源、日期、链接和评分依据回答，不得用自身知识补全或推断；`needs_review` 数据只说明“需要人工复核”，不推测具体哪些字段未确认。
 - M6 Agent 工具：`list_growth_directions` / `get_capability_gap` / `get_recommendation_reasons` / `get_path_plan` / `submit_recommendation_feedback`。
+- 赛事 Agent 工具（v0.1.10）：`recommend_competitions`（返回分档后的赛事推荐，最多 `lifecomposer.competition.max-items` 条）/ `get_competition_detail`（按 eventKey 或 name 查询单场赛事，可选附适配信息）。赛事事实只来自 `contest_events` 实时层，不读取 `resources`。
+- 赛事推荐只返回总分 ≥ `lifecomposer.competition.min-display-score`（默认 0.45）的条目；弱匹配赛事被过滤而不是以 `tier=null` 返回。`relatedDirection` 仅在 `directionFit ≥ 0.6` 时标注。
 
 ## 推荐反馈（v0.1 M6）
 
