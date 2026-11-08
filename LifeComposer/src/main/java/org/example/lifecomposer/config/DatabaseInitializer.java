@@ -11,6 +11,8 @@ import org.example.lifecomposer.Repository.CapabilityTagRepository;
 import org.example.lifecomposer.Repository.ChatMessageRepository;
 import org.example.lifecomposer.Repository.ChatUsageRepository;
 import org.example.lifecomposer.Repository.CollegeCreditRuleRepository;
+import org.example.lifecomposer.Repository.ContestEventRepository;
+import org.example.lifecomposer.Repository.ContestSyncRunRepository;
 import org.example.lifecomposer.Repository.CreditActivityRepository;
 import org.example.lifecomposer.Repository.FeedbackRepository;
 import org.example.lifecomposer.Repository.LoginAttemptRepository;
@@ -47,6 +49,8 @@ public class DatabaseInitializer {
     private final UserRepository userRepository;
     private final FeedbackRepository feedbackRepository;
     private final CollegeCreditRuleRepository collegeCreditRuleRepository;
+    private final ContestEventRepository contestEventRepository;
+    private final ContestSyncRunRepository contestSyncRunRepository;
     private final UserProfileRepository userProfileRepository;
     private final CreditActivityRepository creditActivityRepository;
     private final PlanningHistoryRepository planningHistoryRepository;
@@ -71,6 +75,8 @@ public class DatabaseInitializer {
                                ChatMessageRepository chatMessageRepository,
                                UserProfileRepository userProfileRepository,
                                CollegeCreditRuleRepository collegeCreditRuleRepository,
+                               ContestEventRepository contestEventRepository,
+                               ContestSyncRunRepository contestSyncRunRepository,
                                CreditActivityRepository creditActivityRepository,
                                PlanningHistoryRepository planningHistoryRepository,
                                ResourceRepository resourceRepository,
@@ -92,6 +98,8 @@ public class DatabaseInitializer {
         this.chatMessageRepository = chatMessageRepository;
         this.userProfileRepository = userProfileRepository;
         this.collegeCreditRuleRepository = collegeCreditRuleRepository;
+        this.contestEventRepository = contestEventRepository;
+        this.contestSyncRunRepository = contestSyncRunRepository;
         this.creditActivityRepository = creditActivityRepository;
         this.planningHistoryRepository = planningHistoryRepository;
         this.resourceRepository = resourceRepository;
@@ -123,6 +131,8 @@ public class DatabaseInitializer {
         chatMessageRepository.createChatMessageTableIfNeeded();
         chatMessageRepository.migrateSchema();
         resourceRepository.createTableIfNeeded();
+        contestEventRepository.createTableIfNeeded();
+        contestSyncRunRepository.createTableIfNeeded();
         ragChunkRepository.createTableIfNeeded();
         capabilityTagRepository.createTableIfNeeded();
         capabilityReferenceRepository.createTableIfNeeded();

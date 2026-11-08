@@ -634,6 +634,146 @@ CREATE TABLE IF NOT EXISTS recommendation_feedback (
 
 - v0.1 只做可观察、可审计的反馈收集，不做在线学习；`scoring_version` 与快照字段保证历史推荐可解释。
 
+## 竞赛实时数据层（v0.1.10）
+
+竞赛实时数据独立于 `resources`：`resources` 是人工精选、供成长方向推荐引用的静态库；`contest_events` 是服务端定时拉取上游（contest-ddl + 校内通知）落库的实时事件，供竞赛广场、`/api/contests` 与智能体赛事推荐使用。**实时数据不灌入 `resources`**，避免污染推荐固定 ID 与低质数据。状态在读取时按当前时间重算，`status_snapshot` 只作兜底，不直接信。
+
+### `contest_events`（竞赛事件表）
+
+```sql
+CREATE TABLE contest_events (
+  id                    INTEGER PRIMARY KEY AUTOINCREMENT,
+  event_key             TEXT NOT NULL UNIQUE,
+  source                TEXT NOT NULL,
+  source_kind           TEXT NOT NULL,
+  source_id             TEXT NOT NULL,
+  scope                 TEXT NOT NULL,
+  event_type            TEXT,
+  name                  TEXT NOT NULL,
+  organizer             TEXT,
+  level                 TEXT,
+  region                TEXT,
+  location              TEXT,
+  mode                  TEXT,
+  eligibility           TEXT,
+  categories_json       TEXT,
+  tags_json             TEXT,
+  university_tiers_json TEXT,
+  official_url          TEXT,
+  source_url            TEXT,
+  description           TEXT,
+  notes                 TEXT,
+  image_url             TEXT,
+  registration_start    TEXT,
+  registration_deadline TEXT,
+  competition_start     TEXT,
+  competition_end       TEXT,
+  abstract_deadline     TEXT,
+  submission_deadline   TEXT,
+  primary_deadline      TEXT,
+  deadlines_json        TEXT,
+  published_at          TEXT,
+  status_hint           TEXT,
+  status_snapshot       TEXT,
+  confidence            TEXT,
+  verification_status   TEXT,
+  catalog_listed        INTEGER NOT NULL DEFAULT 0,
+  source_name           TEXT,
+  stale                 INTEGER NOT NULL DEFAULT 0,
+  archived              INTEGER NOT NULL DEFAULT 0,
+  first_seen_at         TEXT,
+  last_seen_at          TEXT,
+  source_generated_at   TEXT,
+  fetched_at            TEXT NOT NULL,
+  raw_json              TEXT,
+  created_at            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_contest_scope_status   ON contest_events(scope, status_snapshot);
+CREATE INDEX IF NOT EXISTS idx_contest_scope_deadline ON contest_events(scope, registration_deadline);
+CREATE INDEX IF NOT EXISTS idx_contest_updated        ON contest_events(updated_at);
+```
+
+> **关键设计**：`event_key`（`cddl_<id>` / `notice_<id>`）为 UNIQUE 业务键，同步时按它 upsert（冲突更新业务字段、保留 `created_at`）。所有时间列统一 UTC ISO-8601（`yyyy-MM-ddTHH:mm:ssZ`），展示层显式转 `Asia/Shanghai`。`catalog_listed`/`stale`/`archived` 用 INTEGER 0/1（SQLite 无 BOOLEAN）。
+
+**字段说明：**
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `id` | 物理主键（AUTOINCREMENT） | 1 |
+| `event_key` | 全局唯一业务键，upsert 依据 | 'cddl_51066b7dc8' |
+| `source` | 选中的上游快照源 | 'mirror' / 'github' / 'events' / 'notices' |
+| `source_kind` | competition=竞赛 / notice=校内通知 | 'competition' |
+| `source_id` | 上游原始 id | '2026ai-dcacae3d83' |
+| `scope` | china=国内 / international=国际 / campus=校内 | 'china' |
+| `event_type` | competition / hackathon / summer_camp / conference / pre_admission / notice | 'competition' |
+| `name` | 赛事名称（同名多赛道折叠为一条） | '中国软件杯' |
+| `organizer` | 主办方 | '工业和信息化部' |
+| `level` | campus / university / provincial / national / international / CCF 字符串 / null | 'national' |
+| `region` | 地区（china 或其他，通知为 china） | 'china' |
+| `location` | 地点 | '北京' |
+| `mode` | online / offline / hybrid | 'online' |
+| `eligibility` | 参赛资格描述（年级硬限制据此过滤） | '仅本科生' |
+| `categories_json` | 类别数组（JSON） | `["人工智能"]` |
+| `tags_json` | 用户标签（过滤 saikr 等机器标签后） | `["985"]` |
+| `university_tiers_json` | 目标高校层次 | `["985","211"]` |
+| `official_url` | 官网链接（仅 official_site 有） | 'https://...' |
+| `source_url` | 来源页链接（赛氪/云课堂原文等） | 'https://...' |
+| `description` | 描述 | ... |
+| `notes` | 备注 | ... |
+| `image_url` | 头图 | ... |
+| `registration_start` / `registration_deadline` | 报名起止（UTC ISO） | '2026-09-07T15:59:59Z' |
+| `competition_start` / `competition_end` | 比赛起止 | ... |
+| `abstract_deadline` / `submission_deadline` / `primary_deadline` | 摘要/提交/主截止 | ... |
+| `deadlines_json` | 全部截止节点数组 `[{"date","display","label"}]` | ... |
+| `published_at` | 发布时刻 | ... |
+| `status_hint` | 源端预计算状态（**仅 hint，不直接信**） | 'registration_open' |
+| `status_snapshot` | 同步时落库的状态（读取时按 now 重算覆盖） | 'registration_open' |
+| `confidence` | high / medium / low | 'low' |
+| `verification_status` | official_site / single_source / official_notice | 'single_source' |
+| `catalog_listed` | 是否入目录（0/1） | 0 |
+| `source_name` | 数据提供方（赛氪/CCFDDL/MLH/北邮云平台等） | '赛氪' |
+| `stale` / `archived` | 是否过期 / 归档（0/1，硬过滤依据） | 0 / 0 |
+| `first_seen_at` / `last_seen_at` | 上游首见 / 末见 | ... |
+| `source_generated_at` | 上游快照生成时间（新鲜度判断依据） | ... |
+| `fetched_at` | 本次抓取时间（NOT NULL） | ... |
+| `raw_json` | 上游原始 JSON（复算/调试用） | ... |
+| `created_at` / `updated_at` | 入库 / 更新时间（自动） | ... |
+
+### `contest_sync_runs`（同步运行记录）
+
+```sql
+CREATE TABLE contest_sync_runs (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  started_at     TEXT NOT NULL,
+  finished_at    TEXT,
+  status         TEXT NOT NULL,
+  source         TEXT,
+  http_status    INTEGER,
+  generated_at   TEXT,
+  items_seen     INTEGER NOT NULL DEFAULT 0,
+  items_upserted INTEGER NOT NULL DEFAULT 0,
+  items_skipped  INTEGER NOT NULL DEFAULT 0,
+  error          TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_contest_sync_started ON contest_sync_runs(started_at DESC);
+```
+
+**字段说明：**
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| `id` | 物理主键 | 1 |
+| `started_at` / `finished_at` | 开始 / 结束时刻 | ... |
+| `status` | running / success / partial / failed | 'success' |
+| `source` | 同步的数据源 | 'mirror' / 'github' / 'notices' |
+| `http_status` | 上游 HTTP 状态码 | 200 |
+| `generated_at` | 上游快照 generated_at | ... |
+| `items_seen` / `items_upserted` / `items_skipped` | 见到的 / upsert 的 / 跳过的条数 | 659 / 659 / 0 |
+| `error` | 失败原因（成功为 NULL） | null |
+
+> **last-good 兜底**：同步失败只记 `failed` 一条 run，不覆盖已有 `contest_events` 数据；查询层以 `updated_at`/`fetched_at` 判断新鲜度。
+
 ## 登录安全相关表（v0.1.5 / v0.1.9）
 
 登录失败计数与登录审计都落在独立的小表里，**不动 `users`**：`users` 只放账号本身，
@@ -754,6 +894,8 @@ account 层把 `failures = failures + 1` 换成
 13. recommendation_feedback（依赖 users）
 14. login_attempt（无外部依赖）
 15. login_log（无外部依赖，写入在事务外、失败不阻断登录）
+16. contest_events（无外部依赖）
+17. contest_sync_runs（无外部依赖）
 ```
 
 > 上述建表逻辑在 `DatabaseInitializer.init()` 方法中通过 `createXxxTableIfNeeded()` 逐步执行。
@@ -820,6 +962,6 @@ Milestone 7 管理控制台带来按用户/状态/类型/日期的分页筛选�
 ---
 
 *设计日期：2026-06-11*
-*更新日期：2026-11-04（v0.1.9：新增「登录安全相关表」一节，补 `login_attempt`（pair/account 分层、并发安全 upsert、锁定不续期、保留期）与 `login_log`（审计字段与保留期）的 DDL 与迁移说明；建表顺序补 13–15。2026-09-23：v0.1：user_profiles 新增 version；新增 profile_change_candidates / user_capability_states / recommendation_feedback。2026-09-14：v0.0.6 Milestone 6/7，无表结构变更，补充管理控制台索引与时间戳归一化说明。2026-09-05 第二轮：移除 goals 表并入 user_profiles.goals；resources 改双键 AUTOINCREMENT id + 唯一业务 id resource_id；前轮：college_credit_rules 加 levels_json/notes，user_profiles 加 available_time/goals，新增 resources / rag_chunks / capability_tags / capability_reference）*
+*更新日期：2026-11-08（v0.1.10：新增「竞赛实时数据层」一节，补 `contest_events`（45 列，event_key UNIQUE，实时竞赛/校内通知事件）与 `contest_sync_runs`（同步运行记录，last-good 兜底）的 DDL 与索引；建表顺序补 16–17。2026-11-04：v0.1.9：新增「登录安全相关表」一节，补 `login_attempt`（pair/account 分层、并发安全 upsert、锁定不续期、保留期）与 `login_log`（审计字段与保留期）的 DDL 与迁移说明；建表顺序补 13–15。2026-09-23：v0.1：user_profiles 新增 version；新增 profile_change_candidates / user_capability_states / recommendation_feedback。2026-09-14：v0.0.6 Milestone 6/7，无表结构变更，补充管理控制台索引与时间戳归一化说明。2026-09-05 第二轮：移除 goals 表并入 user_profiles.goals；resources 改双键 AUTOINCREMENT id + 唯一业务 id resource_id；前轮：college_credit_rules 加 levels_json/notes，user_profiles 加 available_time/goals，新增 resources / rag_chunks / capability_tags / capability_reference）*
 *参考文件：信通院创新实践活动加分办法_2023级起适用.pdf；样例/SAMPLES-README.md（数据交付包 2026-09-05 快照）*
 *实际代码：LifeComposer/src/main/java/org/example/lifecomposer/Repository/*.java*
