@@ -96,6 +96,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/college-credit-rules/**").authenticated()
                         .requestMatchers("/api/credit-activities/**").authenticated()
                         .requestMatchers("/api/resources/**").authenticated()
+                        .requestMatchers("/api/contests/**").authenticated()
                         .requestMatchers("/api/rag-chunks/**").authenticated()
                         .requestMatchers("/api/capability-tags/**").authenticated()
                         .requestMatchers("/api/capability-reference/**").authenticated()

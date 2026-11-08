@@ -304,6 +304,35 @@ class AgentOrchestratorTest {
     }
 
     @Test
+    void injectsCompetitionContractWhenCompetitionToolWasCalled() {
+        List<ChatMessage> stored = new ArrayList<>();
+        ChatMessageRepository repository = mockRepository(stored);
+
+        ScriptedLlmClient client = new ScriptedLlmClient(List.of(
+                competitionToolCallResponse(),
+                textResponse("done")));
+        LlmClientFactory factory = mock(LlmClientFactory.class);
+        when(factory.getClient("chat")).thenReturn(client);
+
+        ToolRegistry registry = new ToolRegistry(List.of(new FakeRecommendCompetitionsTool()));
+        AgentOrchestrator orchestrator = new AgentOrchestrator(
+                repository, factory, registry, new AppSecurityProperties());
+
+        ChatResponse response = orchestrator.sendMessage(1, "帮我看看");
+        assertEquals("done", response.getContent());
+
+        List<LlmChatMessage> secondRequest = client.requests.get(1).getMessages();
+        boolean hasCompetitionContract = secondRequest.stream()
+                .filter(message -> "system".equals(message.getRole()))
+                .anyMatch(message -> message.getContent() != null
+                        && message.getContent().contains("competition_recommendation"));
+        assertTrue(hasCompetitionContract, "实际调用赛事工具后，后续轮次应补上赛事推荐契约");
+        assertTrue(response.getPromptVersions().containsKey("COMPETITION_RECOMMENDATION"));
+        assertFalse(response.getPromptVersions().containsKey("DIRECTION_EXPLANATION"),
+                "赛事工具不应误加载方向契约");
+    }
+
+    @Test
     void keepsSmallerClientMaxTokens() {
         ChatMessageRepository repository = mockRepository(new ArrayList<>());
         LlmClientFactory factory = mock(LlmClientFactory.class);
@@ -497,6 +526,13 @@ class AgentOrchestratorTest {
         LlmResponseDto response = new LlmResponseDto();
         response.setToolCalls(List.of(new LlmToolCall(
                 "call-1", "list_growth_directions", "{}")));
+        return response;
+    }
+
+    private LlmResponseDto competitionToolCallResponse() {
+        LlmResponseDto response = new LlmResponseDto();
+        response.setToolCalls(List.of(new LlmToolCall(
+                "call-1", "recommend_competitions", "{\"query\":\"算法比赛\"}")));
         return response;
     }
 
@@ -742,6 +778,38 @@ class AgentOrchestratorTest {
         @Override
         public ToolResult execute(AgentToolContext context, JsonObject arguments) {
             return ToolResult.ok(Map.of("count", 1, "recommendations", List.of()));
+        }
+    }
+
+    private static final class FakeRecommendCompetitionsTool implements AgentTool {
+
+        @Override
+        public String name() {
+            return "recommend_competitions";
+        }
+
+        @Override
+        public String description() {
+            return "推荐赛事";
+        }
+
+        @Override
+        public String displayDescription() {
+            return "推荐赛事";
+        }
+
+        @Override
+        public Map<String, Object> parameterSchema() {
+            return Map.of(
+                    "type", "object",
+                    "properties", Map.of("query", Map.of("type", "string")),
+                    "required", List.of("query"),
+                    "additionalProperties", false);
+        }
+
+        @Override
+        public ToolResult execute(AgentToolContext context, JsonObject arguments) {
+            return ToolResult.ok(Map.of("count", 0, "items", List.of()));
         }
     }
 

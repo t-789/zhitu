@@ -197,6 +197,24 @@
 | GET | `/api/resources` | 已登录 | 资源列表；可选 `type` 过滤（`competition` 或 `course`），不带参数返回全部；`type` 非法返回 400 纯文本 |
 | GET | `/api/resources/{id}` | 已登录 | 资源详情：优先按业务键 `resource_id`（如 `competition_001`）匹配，纯数字回退物理主键；不存在返回 404 纯文本 |
 
+## 竞赛实时数据 (Contests, v0.1.10)
+
+实时竞赛事件，数据来自服务端定时同步（contest-ddl 镜像/GitHub + 校内通知，见 `SCHEMA.md`「竞赛实时数据层」）。状态在读取时按当前时间重算，`status_snapshot` 只作兜底。
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/api/contests` | 已登录 | 竞赛列表（信封 `{items,total,limit,offset,syncedAt,sourceGeneratedAt,staleSource}`）。参数全部可选：`scope`（`china`/`international`/`campus`/`all`）、`status`（`active` 或 8 个状态键之一）、`type`（`competition`/`hackathon`/`campus_notice`/`all`）、`q`（名称/类别关键词）、`limit`（默认 20，夹到 1–100）、`offset`（默认 0）、`sort`（`deadline`/`name`，默认 `deadline`）。非法 `scope`/`status`/`type`/`sort` 返回 400 纯文本 |
+| GET | `/api/contests/{eventKey}` | 已登录 | 竞赛详情；`eventKey` 形如 `cddl_<id>` / `notice_<id>`；不存在返回 404 纯文本"竞赛不存在: {key}" |
+
+> `status=active` 等价于 `registration_upcoming` + `registration_open` + `ongoing` + `submission_open` 的并集；8 个状态键为 `registration_upcoming` / `registration_open` / `registration_closed` / `ongoing` / `submission_open` / `ended` / `archived` / `unknown`。`type=campus_notice` 映射到校内通知（内部 `event_type=notice`）。
+
+### 竞赛同步运维（管理端）
+
+| 方法 | 路径 | 认证 | 说明 |
+|------|------|------|------|
+| GET | `/api/admin/contests/sync-status` | ADMIN | 最近一次同步记录 `lastRun`（startedAt/finishedAt/status/source/httpStatus/generatedAt/itemsSeen/itemsUpserted/itemsSkipped/error，无记录为 null）+ `activeEvents`（库内未归档事件数）+ `latestFetchedAt` + `latestSourceGeneratedAt` |
+| POST | `/api/admin/contests/sync` | ADMIN | 手动触发一轮同步（防重入）；返回 `{competitionsOk,noticesOk,ok}`。状态变更请求，受 CSRF 保护 |
+
 ## RAG 检索切片 (RAG Chunks)
 
 | 方法 | 路径 | 认证 | 说明 |
@@ -355,7 +373,7 @@
 - **需要 ADMIN 角色**：`/api/admin/**`（v0.0.6 管理控制台）, `/admin` 与 `/admin/**`（v0.0.6 管理页面）, `/api/users/all`, `/api/users/*/grant-admin`, `/api/users/*/revoke-admin`, `/api/users/*/ban`, `/api/users/*/unban`, `/api/users/admin/**`, `/api/feedback/all`, `/api/feedback/type/**`, `/api/feedback/*/resolve`, `POST /api/college-credit-rules`
 - **v0.0.6 变更**：`POST /api/users/admin/reset-password/{userId}` 下发带状态与有效期的临时密码且不回显，用户首次登录必须通过 `POST /api/users/password` 修改；撤销或封禁最后一个可登录管理员返回 409，保证系统始终存在可登录管理员
 - **v0.0.6 会话失效**：密码变更会递增 `users.credential_version`，服务端会立即销毁用旧密码建立的会话（401 `SESSION_EXPIRED`）；带临时密码状态的会话只能访问修改密码相关端点（401 `PASSWORD_CHANGE_REQUIRED`）
-- **需要认证**：`/api/users/password`（v0.0.6 自助修改密码）, `/api/users/current`, `/api/users/logout`, `/api/profiles/**`, `/api/planning/**`, `/api/qa/ask`, `/api/chat/**`, `/api/college-credit-rules/**`（除 POST 管理外）, `/api/credit-activities/**`, `/api/resources/**`, `/api/rag-chunks/**`, `/api/capability-tags/**`, `/api/capability-reference/**`, `/front/**`
+- **需要认证**：`/api/users/password`（v0.0.6 自助修改密码）, `/api/users/current`, `/api/users/logout`, `/api/profiles/**`, `/api/planning/**`, `/api/qa/ask`, `/api/chat/**`, `/api/college-credit-rules/**`（除 POST 管理外）, `/api/credit-activities/**`, `/api/resources/**`, `/api/contests/**`（v0.1.10）, `/api/rag-chunks/**`, `/api/capability-tags/**`, `/api/capability-reference/**`, `/front/**`
 - **未认证的状态码**：以上受保护端点在没有有效会话时返回 **403**（Spring Security 过滤器链默认行为），**不是 401**；401 只由会话守卫产生（见上）
 - **v0.0.3 变更**：原目标管理端点相关认证匹配已随 goals 表一并移除；新增 6 个 `/api` 前缀的认证配置（college-credit-rules / credit-activities / resources / rag-chunks / capability-tags / capability-reference）
 - **认证机制**：JSESSIONID Cookie 传递认证状态

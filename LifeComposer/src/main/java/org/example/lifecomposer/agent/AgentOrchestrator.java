@@ -52,6 +52,8 @@ public class AgentOrchestrator {
     private static final int MAX_TOOL_ROUNDS = 8;
     private static final java.util.Set<String> RECOMMENDATION_TOOLS = java.util.Set.of(
             "list_growth_directions", "get_capability_gap", "get_recommendation_reasons", "get_path_plan");
+    private static final java.util.Set<String> COMPETITION_TOOLS = java.util.Set.of(
+            "recommend_competitions", "get_competition_detail");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     /** JVM default zone is UTC (storage); the display strings keep campus local time. */
     private static final java.time.ZoneId DISPLAY_ZONE = java.time.ZoneId.of("Asia/Shanghai");
@@ -206,6 +208,7 @@ public class AgentOrchestrator {
         listener.onPromptVersions(new LinkedHashMap<>(usedVersions));
         boolean recommendationContractLoaded = usedVersions.containsKey(PromptId.DIRECTION_EXPLANATION.name())
                 && usedVersions.containsKey(PromptId.PATH_SUGGESTION.name());
+        boolean competitionContractLoaded = usedVersions.containsKey(PromptId.COMPETITION_RECOMMENDATION.name());
 
         List<LlmChatMessage> context = new ArrayList<>(conversation);
         for (int round = 0; round < MAX_TOOL_ROUNDS; round++) {
@@ -282,6 +285,19 @@ public class AgentOrchestrator {
                     }
                     listener.onPromptVersions(new LinkedHashMap<>(usedVersions));
                     recommendationContractLoaded = true;
+                }
+                if (!competitionContractLoaded && turnToolCalls.stream()
+                        .anyMatch(call -> COMPETITION_TOOLS.contains(call.name()))) {
+                    PromptComposer.ComposedPrompt contract = promptComposer.competitionContract();
+                    usedVersions.putAll(contract.versions());
+                    if (!context.isEmpty()) {
+                        LlmChatMessage system = context.get(0);
+                        context.set(0, LlmChatMessage.system(
+                                (system.getContent() == null ? "" : system.getContent())
+                                        + "\n\n" + contract.systemPrompt()));
+                    }
+                    listener.onPromptVersions(new LinkedHashMap<>(usedVersions));
+                    competitionContractLoaded = true;
                 }
                 continue;
             }

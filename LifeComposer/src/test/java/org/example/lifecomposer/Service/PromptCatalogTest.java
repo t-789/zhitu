@@ -23,7 +23,7 @@ class PromptCatalogTest {
             assertNotNull(catalog.version(id));
             assertFalse(catalog.text(id).isBlank(), "empty prompt: " + id);
         }
-        assertEquals("4", catalog.version(PromptId.CHAT_SYSTEM));
+        assertEquals("5", catalog.version(PromptId.CHAT_SYSTEM));
     }
 
     @Test
@@ -56,23 +56,37 @@ class PromptCatalogTest {
         assertTrue(chat.systemPrompt().contains("direction_explanation"));
 
         PromptComposer.ComposedPrompt decision = composer.forDecisionContinuation();
-        assertEquals(4, decision.versions().size());
+        assertEquals(5, decision.versions().size());
         assertTrue(decision.systemPrompt().contains("path_suggestion"));
         String fingerprint = composer.fingerprint(decision.versions());
-        assertTrue(fingerprint.contains("CHAT_SYSTEM=4"));
+        assertTrue(fingerprint.contains("CHAT_SYSTEM=5"));
         assertTrue(fingerprint.contains("PROFILE_EXTRACTION=2"));
     }
 
     @Test
-    void composerRecognizesCompetitionPreparationQuestions() {
+    void composerSelectsCompetitionPromptForCompetitionQuestions() {
         PromptComposer composer = new PromptComposer(catalog);
 
+        // Competition strong words select the competition prompt, not the direction one.
         PromptComposer.ComposedPrompt competition = composer.forUserMessage("我想参加蓝桥杯，应该怎么准备？");
-        assertTrue(competition.versions().containsKey("DIRECTION_EXPLANATION"));
-        assertTrue(competition.versions().containsKey("PATH_SUGGESTION"));
+        assertTrue(competition.versions().containsKey("COMPETITION_RECOMMENDATION"));
+        assertFalse(competition.versions().containsKey("DIRECTION_EXPLANATION"));
+        assertTrue(competition.systemPrompt().contains("competition_recommendation"));
 
+        // "推荐比赛" is a weak word + competition word → competition prompt only.
+        PromptComposer.ComposedPrompt recommend = composer.forUserMessage("推荐比赛");
+        assertTrue(recommend.versions().containsKey("COMPETITION_RECOMMENDATION"));
+        assertFalse(recommend.versions().containsKey("DIRECTION_EXPLANATION"));
+
+        // Direction question still loads the direction prompts.
+        PromptComposer.ComposedPrompt direction = composer.forUserMessage("帮我推荐一个适合的方向");
+        assertTrue(direction.versions().containsKey("DIRECTION_EXPLANATION"));
+        assertFalse(direction.versions().containsKey("COMPETITION_RECOMMENDATION"));
+
+        // Unrelated message loads neither.
         PromptComposer.ComposedPrompt unrelated = composer.forUserMessage("你好");
         assertFalse(unrelated.versions().containsKey("DIRECTION_EXPLANATION"));
+        assertFalse(unrelated.versions().containsKey("COMPETITION_RECOMMENDATION"));
         assertTrue(unrelated.versions().containsKey("PROFILE_EXTRACTION"));
     }
 
