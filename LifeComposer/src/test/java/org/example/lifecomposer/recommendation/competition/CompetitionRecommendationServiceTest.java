@@ -142,8 +142,9 @@ class CompetitionRecommendationServiceTest {
         contestEventRepository.upsert(competition("cddl_algo", "蓝桥杯算法赛", "[\"算法\"]",
                 iso(30), "single_source", "low", "national", "china"));
 
+        // query 带「算法」兴趣词，使算法赛总分过展示阈值；排除词只排除数学建模。
         CompetitionRecommendationResult result = recommendationService.recommend(
-                USER_ID, "找比赛", null, null, false, null, null, null,
+                USER_ID, "算法比赛", null, null, false, null, null, null,
                 List.of("数学建模"), null, null);
 
         assertTrue(result.getItems().stream().noneMatch(i -> i.getEventKey().equals("cddl_mcm")));

@@ -68,10 +68,16 @@ class PromptCatalogTest {
         PromptComposer composer = new PromptComposer(catalog);
 
         // Competition strong words select the competition prompt, not the direction one.
-        PromptComposer.ComposedPrompt competition = composer.forUserMessage("我想参加蓝桥杯，应该怎么准备？");
+        PromptComposer.ComposedPrompt competition = composer.forUserMessage("我想参加蓝桥杯");
         assertTrue(competition.versions().containsKey("COMPETITION_RECOMMENDATION"));
         assertFalse(competition.versions().containsKey("DIRECTION_EXPLANATION"));
         assertTrue(competition.systemPrompt().contains("competition_recommendation"));
+
+        // bug8：赛事词 + “怎么准备”同时命中时，也应带上方向/路径 Prompt。
+        PromptComposer.ComposedPrompt preparation = composer.forUserMessage("我想参加蓝桥杯，应该怎么准备？");
+        assertTrue(preparation.versions().containsKey("COMPETITION_RECOMMENDATION"));
+        assertTrue(preparation.versions().containsKey("DIRECTION_EXPLANATION"));
+        assertTrue(preparation.systemPrompt().contains("path_suggestion"));
 
         // "推荐比赛" is a weak word + competition word → competition prompt only.
         PromptComposer.ComposedPrompt recommend = composer.forUserMessage("推荐比赛");

@@ -39,20 +39,24 @@ class CompetitionQueryParserTest {
     }
 
     @Test
-    @DisplayName("解析年级提示：研→graduate，大→undergraduate")
+    @DisplayName("解析年级提示：返回精确年级文本（供难度按年级细分）")
     void parsesGradeHint() {
-        assertEquals("graduate", parser.parse("我是研一").gradeHint());
-        assertEquals("undergraduate", parser.parse("我是大二").gradeHint());
+        assertEquals("研一", parser.parse("我是研一").gradeHint());
+        assertEquals("大二", parser.parse("我是大二").gradeHint());
+        assertEquals("博士生", parser.parse("我是博士生").gradeHint());
         assertNull(parser.parse("想找比赛").gradeHint());
     }
 
     @Test
-    @DisplayName("解析形式：线上/线下/线上线下")
+    @DisplayName("解析形式：线上/线下/线上线下；否定形式反转为相反形式")
     void parsesMode() {
         assertEquals("online", parser.parse("想找线上的比赛").mode());
         assertEquals("offline", parser.parse("要线下的").mode());
         assertEquals("hybrid", parser.parse("线上线下结合").mode());
         assertNull(parser.parse("随便").mode());
+        // bug4：不要线下 → online，不要线上 → offline。
+        assertEquals("online", parser.parse("不要线下的").mode());
+        assertEquals("offline", parser.parse("不想线上的").mode());
     }
 
     @Test
@@ -71,6 +75,15 @@ class CompetitionQueryParserTest {
         CompetitionQueryParser.ParsedQuery q = parser.parse("想找数学建模比赛，不要网安");
         assertTrue(q.interestKeywords().contains("数学建模"));
         assertTrue(q.excludeKeywords().contains("网安"));
+    }
+
+    @Test
+    @DisplayName("bug5：不想打数模 → 排除词识别出数模，且数模不再当兴趣词")
+    void parsesExcludeAliasNotPollutingInterest() {
+        CompetitionQueryParser.ParsedQuery q = parser.parse("不想打数模");
+        assertTrue(q.excludeKeywords().contains("数模"), "排除词应识别出数模");
+        assertFalse(q.interestKeywords().contains("数模"), "数模不应被当兴趣词");
+        assertFalse(q.interestKeywords().contains("建模"), "建模不应被当兴趣词");
     }
 
     @Test

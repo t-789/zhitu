@@ -41,10 +41,17 @@ public class ContestSourceClient {
     public record RawSnapshot(String source, String generatedAt, JsonNode items) {
     }
 
-    /** 拉取竞赛快照：镜像优先、GitHub 主源、events 兜底。全失败抛 IllegalStateException。 */
+    /** 拉取竞赛快照：镜像/GitHub 并行拉取选新（同时间 GitHub 优先），events 兜底。全失败抛 IllegalStateException。 */
     public RawSnapshot fetchCompetitionSnapshot() {
-        RawSnapshot mirror = safeFetch("mirror", properties.getMirrorUrl());
-        RawSnapshot github = safeFetch("github", properties.getGithubUrl());
+        // bug15：并行拉取镜像与 GitHub。
+        java.util.concurrent.CompletableFuture<RawSnapshot> mirrorFuture =
+                java.util.concurrent.CompletableFuture.supplyAsync(
+                        () -> safeFetch("mirror", properties.getMirrorUrl()));
+        java.util.concurrent.CompletableFuture<RawSnapshot> githubFuture =
+                java.util.concurrent.CompletableFuture.supplyAsync(
+                        () -> safeFetch("github", properties.getGithubUrl()));
+        RawSnapshot mirror = mirrorFuture.join();
+        RawSnapshot github = githubFuture.join();
         if (mirror != null && github != null) {
             Instant mirrorGen = generatedAt(mirror);
             Instant githubGen = generatedAt(github);
@@ -75,14 +82,15 @@ public class ContestSourceClient {
 
     private RawSnapshot safeFetch(String source, String url) {
         try {
-            return fetch(source, url);
+            return fetch(source, url, 0);
         } catch (Exception e) {
             LOG.warn("竞赛数据源 {} 拉取失败: {}", source, e.getMessage());
             return null;
         }
     }
 
-    private RawSnapshot fetch(String source, String url) throws Exception {
+    /** bug15：网络/5xx 重试 1 次，并校验 schema_version。 */
+    private RawSnapshot fetch(String source, String url, int attempt) throws Exception {
         Request request = new Request.Builder()
                 .url(url)
                 .header("Accept", "application/json")
@@ -90,8 +98,12 @@ public class ContestSourceClient {
                 .get()
                 .build();
         try (Response response = httpClient.newCall(request).execute()) {
+            int code = response.code();
+            if (code >= 500 && attempt < 1) {
+                return fetch(source, url, attempt + 1);
+            }
             if (!response.isSuccessful()) {
-                throw new IllegalStateException("HTTP " + response.code());
+                throw new IllegalStateException("HTTP " + code);
             }
             if (response.body() == null) {
                 throw new IllegalStateException("empty body");
@@ -107,6 +119,14 @@ public class ContestSourceClient {
             JsonNode root = mapper.readTree(body);
             if (root == null || !root.isObject()) {
                 throw new IllegalStateException("响应不是 JSON 对象");
+            }
+            // schema_version 校验：缺失或不兼容视为数据不可用（值可为字符串或数字）。
+            if (!root.hasNonNull("schema_version")) {
+                throw new IllegalStateException("响应缺少 schema_version");
+            }
+            JsonNode schemaVersion = root.get("schema_version");
+            if (!schemaVersion.isTextual() && !schemaVersion.isNumber()) {
+                throw new IllegalStateException("schema_version 不是字符串或数字");
             }
             String generatedAt = root.hasNonNull("generated_at")
                     ? root.get("generated_at").asText() : null;
